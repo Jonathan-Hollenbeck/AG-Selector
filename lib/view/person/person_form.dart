@@ -48,6 +48,8 @@ class _PersonFormState extends State<PersonForm> {
     _nameController.text = widget.person.name; // Pre-fill form fields
     _houseController.text = widget.person.house;
     _schoolClassController.text = widget.person.schoolClass;
+
+    weekdaysPresent = widget.person.weekdaysPresent;
   }
 
   void onWeekdaysSelected(List<String> weekdaysPresent) {
@@ -158,7 +160,9 @@ class _PersonFormState extends State<PersonForm> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Person bearbeiten'),
+        title: widget.createMode == true
+            ? const Text('Person erstellen')
+            : const Text('Person bearbeiten'),
       ),
       body: Form(
         child: SingleChildScrollView(

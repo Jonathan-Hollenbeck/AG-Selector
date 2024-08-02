@@ -36,8 +36,11 @@ class Weekdays {
         default:
       }
     }
-
-    return weekdaysToShortString.substring(0, weekdaysToShortString.length - 2);
+    if (weekdaysToShortString.length >= 2) {
+      return weekdaysToShortString.substring(
+          0, weekdaysToShortString.length - 2);
+    }
+    return "";
   }
 
   static List<String> getWeekdaysFromByteCode(int bytecode) {

@@ -40,6 +40,11 @@ class _AGFormState extends State<AGForm> {
     super.initState();
     _nameController.text = widget.ag.name; // Pre-fill form fields
     _descriptionController.text = widget.ag.description;
+    _maxPersonsController.text = widget.ag.maxPersons.toString();
+
+    startTime = widget.ag.startTime;
+    endTime = widget.ag.endTime;
+
     weekdays = widget.ag.weekdays;
   }
 
@@ -139,7 +144,9 @@ class _AGFormState extends State<AGForm> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('AG bearbeiten'),
+        title: widget.createMode == true
+            ? const Text('AG erstellen')
+            : const Text('AG bearbeiten'),
       ),
       body: Form(
         child: SingleChildScrollView(

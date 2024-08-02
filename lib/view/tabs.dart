@@ -70,6 +70,7 @@ class _TabsState extends State<Tabs> {
               settings: settings,
             ),
             PersonList(
+              persistendManager: persistendManager,
               setPersons: setPersons,
               settings: settings,
               ags: ags,

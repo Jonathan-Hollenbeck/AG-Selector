@@ -88,6 +88,15 @@ class _PersonListState extends State<PersonList> {
           child: SingleChildScrollView(
         child: Column(
           children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+              ),
+              onPressed: () {
+                openPersonForm(Person.createEmptyPerson(), true);
+              },
+              child: const Icon(Icons.add),
+            ),
             Table(
               border: TableBorder.all(),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,

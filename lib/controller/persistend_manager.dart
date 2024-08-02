@@ -45,18 +45,27 @@ class PersistendManager {
       final List<Map<String, Object?>> personsMap =
           await database!.query(personsTableName);
       for (Map<String, Object?> personEntry in personsMap) {
-        Person newPerson = Person.fromObjectMap(personEntry);
-        persons.add(newPerson);
+        int? personId =
+            int.tryParse(personEntry[PersistendObject.idDBField].toString());
+        if (personId != null) {
+          Map<String, Map<int, AG>> agPreferencesByWeekday =
+              await getAGPreferencesForPersonFromPersonPreferenceTable(
+                  personId);
+          Person newPerson =
+              Person.fromObjectMap(personEntry, agPreferencesByWeekday);
+          persons.add(newPerson);
+        }
       }
     }
     return persons;
   }
 
-  void insertPersonAGPairIntoPersonPreferenceTable(int personId, int agId) {}
+  void insertPersonAGPairIntoPersonPreferenceTable(
+      int personId, int agId, String weekday, int preferenceNumber) {}
 
-  Map<String, Map<int, AG>> getAGPreferencesForPersonFromPersonPreferenceTable(
-      int personId) async {
-    List<AG> ags = [];
+  Future<Map<String, Map<int, AG>>>
+      getAGPreferencesForPersonFromPersonPreferenceTable(int personId) async {
+    Map<String, Map<int, AG>> agPreferencesByWeekday = <String, Map<int, AG>>{};
     if (database != null && database!.isOpen) {
       //get all ag ids for the given person id
       final List<Map<String, Object?>> agsIdMap = await database!.query(
@@ -64,7 +73,6 @@ class PersistendManager {
           columns: [agIdDBField, preferenceNumberDBField, weekdayDBField],
           where: "$personIdDBField = ?",
           whereArgs: [personId]);
-      Map<int, Map<int, 
       //put all the ids in a sql list string
       String agsIds = "";
       for (Map<String, Object?> agIdEntry in agsIdMap) {
@@ -81,15 +89,39 @@ class PersistendManager {
       final List<Map<String, Object?>> agsMap = await database!.query(
           agsTableName,
           columns: [PersistendObject.idDBField],
-          where: "${PersistendObject.idDBField} IN ($agsIds)",
-          whereArgs: [personId]);
-
+          where: "${PersistendObject.idDBField} IN ($agsIds)");
+      //map ags to agids for fast finding them later
+      Map<int, AG> agIdToAG = {};
       for (Map<String, Object?> agEntry in agsMap) {
         AG newAG = AG.fromObjectMap(agEntry);
-        ags.add(newAG);
+        agIdToAG.putIfAbsent(newAG.id, () => newAG);
+      }
+      //fill the map with the entries
+      for (Map<String, Object?> agIdEntry in agsIdMap) {
+        //get all the variables form the agsIdMap
+        int? agIdEntryId =
+            int.tryParse(agIdEntry[PersistendObject.idDBField].toString());
+        String agIdEntryWeekdays = agIdEntry[weekdayDBField].toString();
+        int? agIdEntryPreferenceNumber =
+            int.tryParse(agIdEntry[preferenceNumberDBField].toString());
+        //check for nulls or empty
+        if (agIdEntryId != null &&
+            agIdEntryWeekdays.isNotEmpty &&
+            agIdEntryPreferenceNumber != null) {
+          //get the AG from the previously created Map
+          AG? entryAG = agIdToAG[agIdEntryId];
+          //check for null
+          if (entryAG != null) {
+            //add to the return Map
+            Map<int, AG> preferenceToAG = {};
+            preferenceToAG.putIfAbsent(
+                agIdEntryPreferenceNumber, () => entryAG);
+            agPreferencesByWeekday.putIfAbsent(
+                agIdEntryWeekdays, () => preferenceToAG);
+          }
+        }
       }
     }
-    Map<String, Map<int, AG>> agPreferencesByWeekday = <String, Map<int, AG>>{};
     return agPreferencesByWeekday;
   }
 
@@ -102,7 +134,7 @@ class PersistendManager {
     int id = -1;
     if (database != null && database!.isOpen) {
       Map<String, Object> objectMap = persistendObject.toObjectMap(false);
-      id = await database!.insert(agsTableName, objectMap);
+      id = await database!.insert(tableName, objectMap);
     }
     return id;
   }
@@ -129,7 +161,6 @@ class PersistendManager {
     if (database != null && database!.isOpen) {
       int millisecondsSinceEpoch = DateTime.now().millisecondsSinceEpoch;
 
-      print("creating Settings Table");
       //create AGS Table
       await database!.execute('''
         CREATE TABLE IF NOT EXISTS $settingsTableName (
@@ -139,7 +170,6 @@ class PersistendManager {
         )
       ''');
 
-      print("creating AGs Table");
       //create AGS Table
       await database!.execute('''
         CREATE TABLE IF NOT EXISTS $agsTableName (
@@ -153,7 +183,6 @@ class PersistendManager {
         )
       ''');
 
-      print("creating Persons Table");
       //create Persons Table
       await database!.execute('''
         CREATE TABLE IF NOT EXISTS $personsTableName (
@@ -165,7 +194,6 @@ class PersistendManager {
         )
       ''');
 
-      print("creating Person Preference Table");
       //create Person Preference Table
       await database!.execute('''
         CREATE TABLE IF NOT EXISTS $personPreferencesTableName (

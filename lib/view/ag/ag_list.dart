@@ -80,6 +80,15 @@ class _AGListState extends State<AGList> {
           child: SingleChildScrollView(
         child: Column(
           children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+              ),
+              onPressed: () {
+                openAGForm(AG.createEmptyAG(), true);
+              },
+              child: const Icon(Icons.add),
+            ),
             Table(
               border: TableBorder.all(),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
