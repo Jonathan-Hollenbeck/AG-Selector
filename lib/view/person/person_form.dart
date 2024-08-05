@@ -136,8 +136,7 @@ class _PersonFormState extends State<PersonForm> {
         name: name,
         house: house,
         schoolClass: schoolClass,
-        weekdaysPresent: weekdaysPresent,
-        agPreferencesByWeekday: agPreferencesByWeekday);
+        weekdaysPresent: weekdaysPresent);
 
     if (widget.createMode == true) {
       widget.onPersonCreated(newPerson);

@@ -1,4 +1,4 @@
-import 'package:ag_selector/controller/persistend_manager.dart';
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/settings.dart';
@@ -19,15 +19,15 @@ class _TabsState extends State<Tabs> {
   List<AG> ags = [];
   List<Person> persons = [];
 
-  PersistendManager persistendManager = PersistendManager();
+  PersistenceManager persistendManager = PersistenceManager();
 
-  Settings settings = Settings(Settings.DEFAULT_NUMBER_OF_PREFERENCES);
+  Settings settings = Settings(Settings.defaultNumberOfPreferences);
 
   @override
   void initState() {
     super.initState();
     persistendManager.bindDatabase(persistendManager.getDefaultDatabasePath(),
-        PersistendManager.defaultDatabaseName);
+        PersistenceManager.defaultDatabaseName);
   }
 
   void setSettings(Settings settings) {

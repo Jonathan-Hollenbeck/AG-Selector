@@ -1,4 +1,4 @@
-import 'package:ag_selector/controller/persistend_manager.dart';
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/settings.dart';
 import 'package:ag_selector/model/weekdays.dart';
@@ -7,7 +7,7 @@ import 'package:ag_selector/view/ag/ag_form.dart';
 import 'package:flutter/material.dart';
 
 class AGList extends StatefulWidget {
-  final PersistendManager persistendManager;
+  final PersistenceManager persistendManager;
   final Settings settings;
 
   const AGList(
@@ -32,20 +32,17 @@ class _AGListState extends State<AGList> {
   }
 
   void onAGCreated(AG ag) async {
-    widget.persistendManager
-        .addPersistendObject(PersistendManager.agsTableName, ag);
+    widget.persistendManager.insertAG(ag);
     reloadAgs();
   }
 
   void onAGEdited(AG ag) async {
-    widget.persistendManager
-        .editPersistendObject(PersistendManager.agsTableName, ag);
+    widget.persistendManager.updateAG(ag);
     reloadAgs();
   }
 
   void onAGDeleted(AG ag) async {
-    widget.persistendManager
-        .deletePersistendObject(PersistendManager.agsTableName, ag);
+    widget.persistendManager.deleteAG(ag);
     reloadAgs();
   }
 

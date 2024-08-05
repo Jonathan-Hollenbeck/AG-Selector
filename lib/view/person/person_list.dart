@@ -1,4 +1,4 @@
-import 'package:ag_selector/controller/persistend_manager.dart';
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/settings.dart';
@@ -7,7 +7,7 @@ import 'package:ag_selector/view/person/person_form.dart';
 import 'package:flutter/material.dart';
 
 class PersonList extends StatefulWidget {
-  final PersistendManager persistendManager;
+  final PersistenceManager persistendManager;
   final Function(List<Person>) setPersons;
   final Settings settings;
   final List<AG> ags;
@@ -38,20 +38,17 @@ class _PersonListState extends State<PersonList> {
   }
 
   void onPersonCreated(Person person) async {
-    widget.persistendManager
-        .addPersistendObject(PersistendManager.personsTableName, person);
+    widget.persistendManager.insertPerson(person);
     reloadAgs();
   }
 
   void onPersonEdited(Person person) async {
-    widget.persistendManager
-        .editPersistendObject(PersistendManager.personsTableName, person);
+    widget.persistendManager.updatePerson(person);
     reloadAgs();
   }
 
   void onPersonDeleted(Person person) async {
-    widget.persistendManager
-        .deletePersistendObject(PersistendManager.personsTableName, person);
+    widget.persistendManager.deletePerson(person);
     reloadAgs();
   }
 

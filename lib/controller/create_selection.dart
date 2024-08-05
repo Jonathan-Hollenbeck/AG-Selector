@@ -21,10 +21,10 @@ class CreateSelection {
     Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
 
     //max person tracker for tracking, if the ag still has slots left
-    Map<AG, int> maxPersonTracker = _getMaxPersonTracker(ags);
+    Map<AG, int> maxPersonTracker = getMaxPersonTracker(ags);
 
     //get all relevant weekdays
-    Set<String> relevantWeekdays = _getRelevantWeekdays(persons, ags);
+    Set<String> relevantWeekdays = getRelevantWeekdays(persons, ags);
 
     //loop through relevant weekdays
     for (String weekday in relevantWeekdays) {
@@ -49,7 +49,7 @@ class CreateSelection {
         }
       }
       //reset maxPersonTracker for the next weekday
-      maxPersonTracker = _getMaxPersonTracker(ags);
+      maxPersonTracker = getMaxPersonTracker(ags);
     }
 
     return selection;
@@ -71,10 +71,10 @@ class CreateSelection {
     int scoreManipulator = numberOfPreferences ~/ 2;
 
     //max person tracker for tracking, if the ag still has slots left
-    Map<AG, int> maxPersonTracker = _getMaxPersonTracker(ags);
+    Map<AG, int> maxPersonTracker = getMaxPersonTracker(ags);
 
     //get all relevant weekdays
-    Set<String> relevantWeekdays = _getRelevantWeekdays(persons, ags);
+    Set<String> relevantWeekdays = getRelevantWeekdays(persons, ags);
 
     //scoring map
     Map<Person, int> preferenceScoring = <Person, int>{};
@@ -114,7 +114,7 @@ class CreateSelection {
         }
       }
       //reset maxPersonTracker for the next weekday
-      maxPersonTracker = _getMaxPersonTracker(ags);
+      maxPersonTracker = getMaxPersonTracker(ags);
       //reorganize Person list by scores
       persons = sortPersonsByScore(preferenceScoring);
     }
@@ -152,7 +152,7 @@ class CreateSelection {
   }
 
   //get all relevant weekdays
-  Set<String> _getRelevantWeekdays(List<Person> persons, List<AG> ags) {
+  Set<String> getRelevantWeekdays(List<Person> persons, List<AG> ags) {
     Set<String> relevantWeekdays = {};
     for (Person person in persons) {
       for (AG ag in ags) {
@@ -167,7 +167,7 @@ class CreateSelection {
   }
 
   //max person tracker for tracking, if the ag still has slots left
-  Map<AG, int> _getMaxPersonTracker(ags) {
+  Map<AG, int> getMaxPersonTracker(ags) {
     Map<AG, int> maxPersonTracker = <AG, int>{};
     for (AG ag in ags) {
       maxPersonTracker[ag] = ag.maxPersons;
