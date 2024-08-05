@@ -66,10 +66,10 @@ class _PersonListState extends State<PersonList> {
                 onPersonDeleted: (Person person) {
                   onPersonDeleted(person);
                 },
+                persistenceManager: widget.persistendManager,
                 person: person,
                 createMode: createMode,
                 ags: widget.ags,
-                numberOfPreferences: widget.settings.numberOfPreferences,
               )),
     );
   }

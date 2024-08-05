@@ -56,7 +56,8 @@ class PersistenceAg {
 
   void update(Database? database, AG ag) {
     if (database != null && database.isOpen) {
-      database.update(tableName, toObjectMap(ag, true));
+      database.update(tableName, toObjectMap(ag, true),
+          where: '${PersistenceObject.idDBField} = ?', whereArgs: [ag.id]);
     }
   }
 

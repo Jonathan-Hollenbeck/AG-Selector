@@ -1,26 +1,22 @@
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
+import 'package:ag_selector/model/settings.dart';
 import 'package:ag_selector/util/int_utils.dart';
 import 'package:ag_selector/util/string_utils.dart';
 import 'package:flutter/material.dart';
 
 class SelectPreferences extends StatefulWidget {
-  final Function(Map<String, Map<int, AG>>) onPreferencesSelected;
-
-  final int numberOfPreferences;
+  final PersistenceManager persistenceManager;
 
   final List<AG> ags;
 
   final List<String> weekdaysPresent;
 
-  final Map<String, Map<int, AG>> agPreferencesByWeekday;
-
   const SelectPreferences(
       {super.key,
-      required this.onPreferencesSelected,
-      required this.numberOfPreferences,
       required this.ags,
-      required this.agPreferencesByWeekday,
-      required this.weekdaysPresent});
+      required this.weekdaysPresent,
+      required this.persistenceManager});
 
   @override
   State<SelectPreferences> createState() => _SelectPreferencesState();
@@ -31,6 +27,8 @@ class _SelectPreferencesState extends State<SelectPreferences> {
   Map<AG, String> agToWeekday = <AG, String>{};
 
   List<String> numberOfPreferencesList = [];
+
+  Settings settings = Settings(Settings.defaultNumberOfPreferences);
 
   AG? getAGWithWeekdayAndPreference(String weekday, int preference) {
     if (widget.agPreferencesByWeekday.keys.contains(weekday) == true) {
@@ -73,14 +71,14 @@ class _SelectPreferencesState extends State<SelectPreferences> {
 
     numberOfPreferencesList = StringUtils.getStringListPlusEmpty(
         StringUtils.copyStringList(StringUtils.intListToStringList(
-            IntUtils.intToIntList(widget.numberOfPreferences)
+            IntUtils.intToIntList(settings.numberOfPreferences)
                 .map((int value) => value + 1)
                 .toList())));
   }
 
   // Function called when form is submitted
   void _submitForm() {
-    widget.onPreferencesSelected(widget.agPreferencesByWeekday);
+    
     Navigator.pop(context);
   }
 

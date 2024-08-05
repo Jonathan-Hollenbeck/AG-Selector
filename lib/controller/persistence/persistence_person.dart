@@ -15,8 +15,10 @@ class PersistencePerson {
   Future<Person?> getById(Database? database, int id) async {
     Person? person;
     if (database != null && database.isOpen) {
-      final List<Map<String, Object?>> personsMap = await database.query(tableName,
-          where: '${PersistenceObject.idDBField} = ?', whereArgs: [id]);
+      final List<Map<String, Object?>> personsMap = await database.query(
+          tableName,
+          where: '${PersistenceObject.idDBField} = ?',
+          whereArgs: [id]);
       person = fromObjectMap(personsMap.first);
     }
     return person;
@@ -55,7 +57,8 @@ class PersistencePerson {
 
   void update(Database? database, Person person) {
     if (database != null && database.isOpen) {
-      database.update(tableName, toObjectMap(person, true));
+      database.update(tableName, toObjectMap(person, true),
+          where: '${PersistenceObject.idDBField} = ?', whereArgs: [person.id]);
     }
   }
 
@@ -76,20 +79,18 @@ class PersistencePerson {
     int id = objectMap[PersistenceObject.idDBField] != null
         ? objectMap[PersistenceObject.idDBField] as int
         : -1;
-    String name = objectMap[nameDBField] != null
-        ? objectMap[nameDBField] as String
-        : "";
+    String name =
+        objectMap[nameDBField] != null ? objectMap[nameDBField] as String : "";
     String house = objectMap[houseDBField] != null
         ? objectMap[houseDBField] as String
         : "";
     String schoolClass = objectMap[schoolClassDBField] != null
         ? objectMap[schoolClassDBField] as String
         : "";
-    List<String> weekdaysPresent =
-        objectMap[weekdaysPresentDBField] != null
-            ? Weekdays.getWeekdaysFromByteCode(
-                objectMap[weekdaysPresentDBField] as int)
-            : [];
+    List<String> weekdaysPresent = objectMap[weekdaysPresentDBField] != null
+        ? Weekdays.getWeekdaysFromByteCode(
+            objectMap[weekdaysPresentDBField] as int)
+        : [];
     Person newPerson = Person(
         id: id,
         name: name,

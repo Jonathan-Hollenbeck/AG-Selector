@@ -8,6 +8,7 @@ import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/persistence_object.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
+import 'package:ag_selector/model/settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -105,6 +106,11 @@ class PersistenceManager {
 
   ///Settings
 
+  Future<Settings?> loadSettings() async {
+    Settings? settings = await persistenceSettings.load(database);
+    return settings;
+  }
+
   ///Database
   Future<void> initDatabase() async {
     if (database != null && database!.isOpen) {
@@ -114,7 +120,7 @@ class PersistenceManager {
       await database!.execute('''
         CREATE TABLE IF NOT EXISTS ${PersistenceSettings.tableName} (
           ${PersistenceObject.idDBField} INTEGER PRIMARY KEY AUTOINCREMENT,
-          ${PersistenceSettings.descriptionDBField} TEXT NOT NULL,
+          ${PersistenceSettings.keyDBField} TEXT NOT NULL,
           ${PersistenceSettings.valueDBField} TEXT NOT NULL
         )
       ''');

@@ -1,3 +1,4 @@
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/util/string_utils.dart';
@@ -10,9 +11,9 @@ class PersonForm extends StatefulWidget {
   final Function(Person) onPersonEdited;
   final Function(Person) onPersonDeleted;
 
-  final Person person;
+  final PersistenceManager persistenceManager;
 
-  final int numberOfPreferences;
+  final Person person;
 
   final bool createMode;
 
@@ -26,7 +27,7 @@ class PersonForm extends StatefulWidget {
     required this.person,
     required this.createMode,
     required this.ags,
-    required this.numberOfPreferences,
+    required this.persistenceManager,
   });
 
   @override
@@ -39,8 +40,6 @@ class _PersonFormState extends State<PersonForm> {
   final _schoolClassController = TextEditingController();
 
   List<String> weekdaysPresent = [];
-
-  Map<String, Map<int, AG>> agPreferencesByWeekday = <String, Map<int, AG>>{};
 
   @override
   void initState() {
@@ -55,12 +54,6 @@ class _PersonFormState extends State<PersonForm> {
   void onWeekdaysSelected(List<String> weekdaysPresent) {
     setState(() {
       this.weekdaysPresent = weekdaysPresent;
-    });
-  }
-
-  void onPreferencesSelected(Map<String, Map<int, AG>> agPreferencesByWeekday) {
-    setState(() {
-      this.agPreferencesByWeekday = agPreferencesByWeekday;
     });
   }
 
@@ -82,11 +75,7 @@ class _PersonFormState extends State<PersonForm> {
       context,
       MaterialPageRoute(
           builder: (context) => SelectPreferences(
-                onPreferencesSelected: (agPreferencesByWeekday) {
-                  onPreferencesSelected(agPreferencesByWeekday);
-                },
-                agPreferencesByWeekday: agPreferencesByWeekday,
-                numberOfPreferences: widget.numberOfPreferences,
+                persistenceManager: widget.persistenceManager,
                 ags: getAGsBasedOnWeekdaysPresent(widget.ags, weekdaysPresent),
                 weekdaysPresent: weekdaysPresent,
               )),
@@ -202,9 +191,9 @@ class _PersonFormState extends State<PersonForm> {
                       onPressed: () {
                         selectAGPreferences();
                       },
-                      child: Text(
-                        "${agPreferencesByWeekday.length} Präferenzen ausgewählt",
-                        style: const TextStyle(fontSize: 16.0),
+                      child: const Text(
+                        "Präferenzen wählen",
+                        style: TextStyle(fontSize: 16.0),
                       ),
                     ),
                   ),
