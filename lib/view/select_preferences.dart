@@ -1,5 +1,7 @@
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
+import 'package:ag_selector/model/person.dart';
+import 'package:ag_selector/model/person_ag_preference.dart';
 import 'package:ag_selector/model/settings.dart';
 import 'package:ag_selector/util/int_utils.dart';
 import 'package:ag_selector/util/string_utils.dart';
@@ -7,6 +9,8 @@ import 'package:flutter/material.dart';
 
 class SelectPreferences extends StatefulWidget {
   final PersistenceManager persistenceManager;
+
+  final Person person;
 
   final List<AG> ags;
 
@@ -16,58 +20,72 @@ class SelectPreferences extends StatefulWidget {
       {super.key,
       required this.ags,
       required this.weekdaysPresent,
-      required this.persistenceManager});
+      required this.persistenceManager,
+      required this.person});
 
   @override
   State<SelectPreferences> createState() => _SelectPreferencesState();
 }
 
 class _SelectPreferencesState extends State<SelectPreferences> {
-  Map<AG, String> agToPreference = <AG, String>{};
-  Map<AG, String> agToWeekday = <AG, String>{};
-
   List<String> numberOfPreferencesList = [];
+
+  List<PersonAgPreference> personAgPreferences = [];
 
   Settings settings = Settings(Settings.defaultNumberOfPreferences);
 
-  AG? getAGWithWeekdayAndPreference(String weekday, int preference) {
-    if (widget.agPreferencesByWeekday.keys.contains(weekday) == true) {
-      if (widget.agPreferencesByWeekday[weekday]!.keys.contains(preference)) {
-        return widget.agPreferencesByWeekday[weekday]![preference];
+  void setAGPreference(AG ag, String preferenceString) {
+    setState(() {
+      PersonAgPreference? personAgPreference = getPersonAgPreferenceFromAG(ag);
+      if (personAgPreference != null && preferenceString != "") {
+        int preference = int.parse(preferenceString);
+
+        personAgPreference.preferenceNumber = preference;
+      }
+    });
+  }
+
+  void setAGWeekday(AG ag, String weekday) {
+    setState(() {
+      PersonAgPreference? personAgPreference = getPersonAgPreferenceFromAG(ag);
+      if (personAgPreference != null && weekday != "") {
+        personAgPreference.weekday = weekday;
+      }
+    });
+  }
+
+  PersonAgPreference? getPersonAgPreferenceFromAG(AG ag) {
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      if (personAgPreference.ag == ag) {
+        return personAgPreference;
       }
     }
     return null;
   }
 
-  void setAGPreferencesByWeekday(AG ag) {
-    setState(() {
-      String? weekday = agToWeekday[ag];
-      String? preferenceString = agToPreference[ag];
-      if (weekday != null &&
-          weekday != "" &&
-          preferenceString != null &&
-          preferenceString != "") {
-        int preference = int.parse(preferenceString);
-
-        AG? previouseAG = getAGWithWeekdayAndPreference(weekday, preference);
-
-        if (previouseAG != null) {
-          agToPreference[previouseAG] = "";
-        }
-
-        widget.agPreferencesByWeekday[weekday] = {preference: ag};
+  String getPreferenceFromAG(AG ag) {
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      if (personAgPreference.ag == ag) {
+        return personAgPreference.preferenceNumber.toString();
       }
-    });
+    }
+    return "";
+  }
+
+  String getWeekdayFromAG(AG ag) {
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      if (personAgPreference.ag == ag) {
+        return personAgPreference.weekday;
+      }
+    }
+    return "";
   }
 
   @override
   void initState() {
     super.initState();
 
-    for (AG ag in widget.ags) {
-      agToPreference[ag] = "";
-      agToWeekday[ag] = "";
-    }
+    reloadPersonAgPreferences();
 
     numberOfPreferencesList = StringUtils.getStringListPlusEmpty(
         StringUtils.copyStringList(StringUtils.intListToStringList(
@@ -76,9 +94,18 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                 .toList())));
   }
 
+  void reloadPersonAgPreferences() async {
+    personAgPreferences =
+        await widget.persistenceManager.getPersonAgPreferences(widget.person);
+    setState(() {});
+  }
+
   // Function called when form is submitted
   void _submitForm() {
-    
+    widget.persistenceManager.deletePersonAgPreferencesForPerson(widget.person);
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      widget.persistenceManager.insertPersonAgPreference(personAgPreference);
+    }
     Navigator.pop(context);
   }
 
@@ -121,7 +148,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                   TableRow(children: [
                     Text(ag.toShortString()),
                     DropdownButton(
-                      value: agToPreference[ag],
+                      value: getPreferenceFromAG(ag),
                       items: numberOfPreferencesList
                           .map<DropdownMenuItem<String>>(
                             (String value) => DropdownMenuItem(
@@ -129,14 +156,11 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                           )
                           .toList(),
                       onChanged: (String? value) {
-                        setState(() {
-                          agToPreference[ag] = value!;
-                        });
-                        setAGPreferencesByWeekday(ag);
+                        setAGPreference(ag, value!);
                       },
                     ),
                     DropdownButton(
-                      value: agToWeekday[ag],
+                      value: getWeekdayFromAG(ag),
                       items: StringUtils.getStringListPlusEmpty(
                               StringUtils.copyStringList(
                                   StringUtils.getIntersectionBetweenTwoLists(
@@ -147,10 +171,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                           )
                           .toList(),
                       onChanged: (String? value) {
-                        setState(() {
-                          agToWeekday[ag] = value!;
-                        });
-                        setAGPreferencesByWeekday(ag);
+                        setAGWeekday(ag, value!);
                       },
                     ),
                   ])

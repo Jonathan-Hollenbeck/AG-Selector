@@ -67,13 +67,9 @@ class _TabsState extends State<Tabs> {
             ),
             AGList(
               persistendManager: persistendManager,
-              settings: settings,
             ),
             PersonList(
               persistendManager: persistendManager,
-              setPersons: setPersons,
-              settings: settings,
-              ags: ags,
             ),
             Selector(persons: persons, ags: ags, settings: settings),
           ],

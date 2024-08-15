@@ -1,6 +1,5 @@
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
-import 'package:ag_selector/model/settings.dart';
 import 'package:ag_selector/model/weekdays.dart';
 import 'package:ag_selector/util/string_utils.dart';
 import 'package:ag_selector/view/ag/ag_form.dart';
@@ -8,10 +7,8 @@ import 'package:flutter/material.dart';
 
 class AGList extends StatefulWidget {
   final PersistenceManager persistendManager;
-  final Settings settings;
 
-  const AGList(
-      {super.key, required this.settings, required this.persistendManager});
+  const AGList({super.key, required this.persistendManager});
 
   @override
   State<AGList> createState() => _AGListState();

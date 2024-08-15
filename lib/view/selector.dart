@@ -35,6 +35,17 @@ class _SelectorListState extends State<Selector> {
     return false;
   }
 
+  void createSelectionForPersons() async {
+    selection = await createSelection.createSelection(
+        widget.persons, widget.ags, widget.settings.numberOfPreferences);
+    for (Person person in selection.keys) {
+      for (String weekday in selection[person]!.keys) {
+        print("${person.name}: $weekday: ${selection[person]![weekday]}\n");
+      }
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,20 +61,7 @@ class _SelectorListState extends State<Selector> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        selection = createSelection.createSelection(
-                            widget.persons,
-                            widget.ags,
-                            widget.settings.numberOfPreferences);
-                        for (Person person in selection.keys) {
-                          for (String weekday in selection[person]!.keys) {
-                            print(
-                                "${person.name}: $weekday: ${selection[person]![weekday]}\n");
-                          }
-                        }
-                      });
-                    },
+                    onPressed: () {},
                     child: const Text(
                       "Selektionsvorschlag generieren",
                       style: TextStyle(fontSize: 16.0),

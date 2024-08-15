@@ -78,6 +78,7 @@ class _PersonFormState extends State<PersonForm> {
                 persistenceManager: widget.persistenceManager,
                 ags: getAGsBasedOnWeekdaysPresent(widget.ags, weekdaysPresent),
                 weekdaysPresent: weekdaysPresent,
+                person: widget.person,
               )),
     );
   }

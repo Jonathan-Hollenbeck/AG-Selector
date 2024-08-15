@@ -1,23 +1,14 @@
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
-import 'package:ag_selector/model/settings.dart';
 import 'package:ag_selector/model/weekdays.dart';
 import 'package:ag_selector/view/person/person_form.dart';
 import 'package:flutter/material.dart';
 
 class PersonList extends StatefulWidget {
   final PersistenceManager persistendManager;
-  final Function(List<Person>) setPersons;
-  final Settings settings;
-  final List<AG> ags;
 
-  const PersonList(
-      {super.key,
-      required this.setPersons,
-      required this.settings,
-      required this.ags,
-      required this.persistendManager});
+  const PersonList({super.key, required this.persistendManager});
 
   @override
   State<PersonList> createState() => _PersonListState();
@@ -26,30 +17,38 @@ class PersonList extends StatefulWidget {
 class _PersonListState extends State<PersonList> {
   List<Person> persons = [];
 
+  List<AG> ags = [];
+
   @override
   void initState() {
     super.initState();
+    reloadPersons();
     reloadAgs();
   }
 
   void reloadAgs() async {
+    ags = await widget.persistendManager.loadAgs();
+    setState(() {});
+  }
+
+  void reloadPersons() async {
     persons = await widget.persistendManager.loadPersons();
     setState(() {});
   }
 
   void onPersonCreated(Person person) async {
     widget.persistendManager.insertPerson(person);
-    reloadAgs();
+    reloadPersons();
   }
 
   void onPersonEdited(Person person) async {
     widget.persistendManager.updatePerson(person);
-    reloadAgs();
+    reloadPersons();
   }
 
   void onPersonDeleted(Person person) async {
     widget.persistendManager.deletePerson(person);
-    reloadAgs();
+    reloadPersons();
   }
 
   void openPersonForm(Person person, bool createMode) {
@@ -69,7 +68,7 @@ class _PersonListState extends State<PersonList> {
                 persistenceManager: widget.persistendManager,
                 person: person,
                 createMode: createMode,
-                ags: widget.ags,
+                ags: ags,
               )),
     );
   }
