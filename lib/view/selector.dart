@@ -36,11 +36,6 @@ class _SelectorListState extends State<Selector> {
   void createSelectionForPersons() async {
     selection = await createSelection.createSelection(
         widget.persistenceManager, persons, ags, settings.numberOfPreferences);
-    for (Person person in selection.keys) {
-      for (String weekday in selection[person]!.keys) {
-        print("${person.name}: $weekday: ${selection[person]![weekday]}\n");
-      }
-    }
     setState(() {});
   }
 

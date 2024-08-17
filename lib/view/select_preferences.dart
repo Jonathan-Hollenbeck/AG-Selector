@@ -106,8 +106,19 @@ class _SelectPreferencesState extends State<SelectPreferences> {
   void initState() {
     super.initState();
 
-    reloadPersonAgPreferences();
+    //create map for view
+    for (AG ag in widget.ags) {
+      for (String weekday in ag.weekdays) {
+        if (agNWeekdayToPreference.keys.contains(ag.id)) {
+          agNWeekdayToPreference[ag.id]!.putIfAbsent(weekday, () => "");
+        } else {
+          agNWeekdayToPreference.putIfAbsent(ag.id, () => {weekday: ""});
+        }
+      }
+    }
+
     reloadSettings();
+    reloadPersonAgPreferences();
   }
 
   void reloadSettings() async {
@@ -124,18 +135,23 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     personAgPreferences =
         await widget.persistenceManager.getPersonAgPreferences(widget.person);
 
-    for (AG ag in widget.ags) {
-      for (String weekday in ag.weekdays) {
-        if (agNWeekdayToPreference.keys.contains(ag.id)) {
-          agNWeekdayToPreference[ag.id]!.putIfAbsent(weekday, () => "");
-        } else {
-          agNWeekdayToPreference.putIfAbsent(ag.id, () => {weekday: ""});
-        }
+    List<PersonAgPreference> removeList = [];
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      //check if personAgPreferences preference numbers is out of bounds and delete if so
+      if (personAgPreference.preferenceNumber > settings.numberOfPreferences) {
+        removeList.add(personAgPreference);
       }
+    }
+    for (PersonAgPreference removePersonAgPreference in removeList) {
+      personAgPreferences.remove(removePersonAgPreference);
     }
 
     for (PersonAgPreference personAgPreference in personAgPreferences) {
-      if (agNWeekdayToPreference.keys.contains(personAgPreference.ag.id)) {
+      //fill in the view map with the loaded preferences
+      if (agNWeekdayToPreference.keys.contains(personAgPreference.ag.id) &&
+          agNWeekdayToPreference[personAgPreference.ag.id]!
+              .keys
+              .contains(personAgPreference.weekday)) {
         agNWeekdayToPreference[personAgPreference.ag.id]![personAgPreference
             .weekday] = personAgPreference.preferenceNumber.toString();
       }
