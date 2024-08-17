@@ -1,21 +1,14 @@
 import 'package:ag_selector/controller/create_selection.dart';
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/settings.dart';
 import 'package:flutter/material.dart';
 
 class Selector extends StatefulWidget {
-  final List<Person> persons;
+  final PersistenceManager persistenceManager;
 
-  final List<AG> ags;
-
-  final Settings settings;
-
-  const Selector(
-      {super.key,
-      required this.persons,
-      required this.ags,
-      required this.settings});
+  const Selector({super.key, required this.persistenceManager});
 
   @override
   State<Selector> createState() => _SelectorListState();
@@ -26,9 +19,14 @@ class _SelectorListState extends State<Selector> {
 
   CreateSelection createSelection = CreateSelection();
 
-  bool isInSelection(Person person, String wochentag) {
+  Settings settings = Settings(Settings.defaultNumberOfPreferences);
+
+  List<Person> persons = [];
+  List<AG> ags = [];
+
+  bool isInSelection(Person person, String weekday) {
     if (selection.keys.contains(person)) {
-      if (selection[person]!.keys.contains(wochentag)) {
+      if (selection[person]!.keys.contains(weekday)) {
         return true;
       }
     }
@@ -37,12 +35,38 @@ class _SelectorListState extends State<Selector> {
 
   void createSelectionForPersons() async {
     selection = await createSelection.createSelection(
-        widget.persons, widget.ags, widget.settings.numberOfPreferences);
+        widget.persistenceManager, persons, ags, settings.numberOfPreferences);
     for (Person person in selection.keys) {
       for (String weekday in selection[person]!.keys) {
         print("${person.name}: $weekday: ${selection[person]![weekday]}\n");
       }
     }
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    reloadPersons();
+    reloadAgs();
+    reloadSettings();
+    setState(() {});
+  }
+
+  void reloadAgs() async {
+    ags = await widget.persistenceManager.loadAgs();
+
+    setState(() {});
+  }
+
+  void reloadPersons() async {
+    persons = await widget.persistenceManager.loadPersons();
+    setState(() {});
+  }
+
+  void reloadSettings() async {
+    settings = await widget.persistenceManager.loadSettings();
     setState(() {});
   }
 
@@ -61,7 +85,9 @@ class _SelectorListState extends State<Selector> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      createSelectionForPersons();
+                    },
                     child: const Text(
                       "Selektionsvorschlag generieren",
                       style: TextStyle(fontSize: 16.0),
@@ -106,29 +132,33 @@ class _SelectorListState extends State<Selector> {
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
                 ]),
-                for (Person person in widget.persons)
-                  for (String weekday in person.weekdaysPresent)
-                    if (isInSelection(person, weekday) == true)
-                      TableRow(children: [
-                        Text(person.name),
-                        Text(person.house),
-                        Text(person.schoolClass),
-                        Text(weekday),
-                        DropdownButton(
-                          value: selection[person]![weekday],
-                          items: widget.ags
-                              .map<DropdownMenuItem<AG>>(
-                                (AG value) => DropdownMenuItem(
-                                    value: value, child: Text(value.name)),
-                              )
-                              .toList(),
-                          onChanged: (AG? value) {
-                            setState(() {
-                              selection[person]![weekday] = value!;
-                            });
-                          },
-                        ),
-                      ])
+                for (Person person in persons)
+                  if (selection[person] != null)
+                    for (String weekday in person.weekdaysPresent)
+                      if (isInSelection(person, weekday) == true)
+                        TableRow(children: [
+                          Text(person.name),
+                          Text(person.house),
+                          Text(person.schoolClass),
+                          Text(weekday),
+                          Text(selection[person]![weekday]!.name),
+                          /**DropdownButton(
+                            value: selection[person]![weekday],
+                            items: ags
+                                .map<DropdownMenuItem<AG>>(
+                                  (AG ag) => DropdownMenuItem(
+                                      value: ag, child: Text(ag.name)),
+                                )
+                                .toList(),
+                            onChanged: (AG? ag) {
+                              setState(() {
+                                if (selection[person] != null) {
+                                  selection[person]![weekday] = ag!;
+                                }
+                              });
+                            },
+                          ),**/
+                        ])
               ],
             ),
           ],

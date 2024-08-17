@@ -6,9 +6,9 @@ import 'package:ag_selector/view/ag/ag_form.dart';
 import 'package:flutter/material.dart';
 
 class AGList extends StatefulWidget {
-  final PersistenceManager persistendManager;
+  final PersistenceManager persistenceManager;
 
-  const AGList({super.key, required this.persistendManager});
+  const AGList({super.key, required this.persistenceManager});
 
   @override
   State<AGList> createState() => _AGListState();
@@ -24,22 +24,22 @@ class _AGListState extends State<AGList> {
   }
 
   void reloadAgs() async {
-    ags = await widget.persistendManager.loadAgs();
+    ags = await widget.persistenceManager.loadAgs();
     setState(() {});
   }
 
   void onAGCreated(AG ag) async {
-    widget.persistendManager.insertAG(ag);
+    widget.persistenceManager.insertAG(ag);
     reloadAgs();
   }
 
   void onAGEdited(AG ag) async {
-    widget.persistendManager.updateAG(ag);
+    widget.persistenceManager.updateAG(ag);
     reloadAgs();
   }
 
   void onAGDeleted(AG ag) async {
-    widget.persistendManager.deleteAG(ag);
+    widget.persistenceManager.deleteAG(ag);
     reloadAgs();
   }
 

@@ -106,9 +106,13 @@ class PersistenceManager {
 
   ///Settings
 
-  Future<Settings?> loadSettings() async {
-    Settings? settings = await persistenceSettings.load(database);
+  Future<Settings> loadSettings() async {
+    Settings settings = await persistenceSettings.load(database);
     return settings;
+  }
+
+  void insertSettings(Settings settings) async {
+    persistenceSettings.insertAllSettings(database, settings);
   }
 
   ///Database

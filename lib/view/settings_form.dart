@@ -1,31 +1,39 @@
+import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class SettingsForm extends StatefulWidget {
-  final Function(Settings settings) setSettings;
-  final Settings settings;
+  final PersistenceManager persistenceManager;
 
-  const SettingsForm(
-      {super.key, required this.settings, required this.setSettings});
+  const SettingsForm({
+    super.key,
+    required this.persistenceManager,
+  });
 
   @override
   State<SettingsForm> createState() => _SettingsFormListState();
 }
 
-class _SettingsFormListState extends State<SettingsForm>
-    with AutomaticKeepAliveClientMixin {
+class _SettingsFormListState extends State<SettingsForm> {
   final TextEditingController _numberOfPreferencesController =
       TextEditingController();
 
-  @override
-  bool get wantKeepAlive => true;
+  Settings settings = Settings(Settings.defaultNumberOfPreferences);
 
   @override
   void initState() {
     super.initState();
+
+    reloadSettings();
+  }
+
+  void reloadSettings() async {
+    settings = await widget.persistenceManager.loadSettings();
+
     _numberOfPreferencesController.text =
-        widget.settings.numberOfPreferences.toString(); // Pre-fill form fields
+        settings.numberOfPreferences.toString(); // Pre-fill form fields
+    setState(() {});
   }
 
   // Function called when form is submitted
@@ -48,17 +56,15 @@ class _SettingsFormListState extends State<SettingsForm>
           );
         },
       );
-      return; // Handle empty fields (optional)
+      return;
     }
 
-    final Settings settings = Settings(int.parse(numberOfPreferences));
-
-    widget.setSettings(settings);
+    settings.numberOfPreferences = int.parse(numberOfPreferences);
+    widget.persistenceManager.insertSettings(settings);
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,

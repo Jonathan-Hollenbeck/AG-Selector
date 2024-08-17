@@ -10,14 +10,25 @@ class PersistenceSettings {
 
   static const String numberOfPreferencesKey = "numberOfPreferences";
 
-  Future<Settings?> load(Database? database) async {
-    Settings? settings;
+  Future<Settings> load(Database? database) async {
+    Settings settings = Settings(Settings.defaultNumberOfPreferences);
     if (database != null && database.isOpen) {
       final List<Map<String, Object?>> settingsMap =
           await database.query(tableName);
-      settings = fromObjectMap(settingsMap.first);
+      for (Map<String, Object?> settingsEntry in settingsMap) {
+        settings = fromObjectMap(settingsEntry, settings);
+      }
     }
     return settings;
+  }
+
+  void insertAllSettings(Database? database, Settings settings) {
+    //delete all Settings
+    delete(database, numberOfPreferencesKey);
+
+    //insert all Settings
+    insert(database, numberOfPreferencesKey,
+        settings.numberOfPreferences.toString());
   }
 
   Future<int> insert(Database? database, String key, String value) async {
@@ -45,25 +56,24 @@ class PersistenceSettings {
     }
   }
 
-  Settings fromObjectMap(Map<String, Object?> objectMap) {
-    int numberOfPreferences = Settings.defaultNumberOfPreferences;
-
-    for (String key in objectMap.keys) {
+  Settings fromObjectMap(Map<String, Object?> objectMap, Settings settings) {
+    Object? key = objectMap[keyDBField];
+    Object? value = objectMap[valueDBField];
+    if (key != null && value != null) {
       switch (key) {
         case numberOfPreferencesKey:
-          numberOfPreferences = objectMap[key] as int;
+          settings.numberOfPreferences = int.parse(value.toString());
           break;
       }
     }
-
-    Settings settings = Settings(numberOfPreferences);
 
     return settings;
   }
 
   Map<String, Object> toObjectMap(String key, String value) {
     Map<String, Object> objectMap = {};
-    objectMap.putIfAbsent(key, () => value);
+    objectMap.putIfAbsent(keyDBField, () => key);
+    objectMap.putIfAbsent(valueDBField, () => value);
     return objectMap;
   }
 }

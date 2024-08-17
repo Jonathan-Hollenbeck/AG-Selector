@@ -6,24 +6,30 @@ import 'package:ag_selector/util/string_utils.dart';
 
 class CreateSelection {
   Future<Map<Person, Map<String, AG>>> createSelection(
-      List<Person> persons, List<AG> ags, int numberOfPreferences) async {
+      PersistenceManager persistenceManager,
+      List<Person> persons,
+      List<AG> ags,
+      int numberOfPreferences) async {
     Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
 
-    selection = await _tryAllFirstChoice(persons, ags);
+    selection = await _tryAllFirstChoice(persistenceManager, persons, ags);
 
     if (selection.isEmpty) {
-      selection = await _tryScoring(persons, ags, numberOfPreferences);
+      selection = await _tryScoring(
+          persistenceManager, persons, ags, numberOfPreferences);
     }
 
     return selection;
   }
 
   Future<Map<Person, Map<String, AG>>> _tryAllFirstChoice(
-      List<Person> persons, List<AG> ags) async {
+      PersistenceManager persistenceManager,
+      List<Person> persons,
+      List<AG> ags) async {
     Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
 
     //max person tracker for tracking, if the ag still has slots left
-    Map<AG, int> maxPersonTracker = getMaxPersonTracker(ags);
+    Map<int, int> maxPersonTracker = getMaxPersonTracker(ags);
 
     //get all relevant weekdays
     Set<String> relevantWeekdays = getRelevantWeekdays(persons, ags);
@@ -32,20 +38,28 @@ class CreateSelection {
     for (String weekday in relevantWeekdays) {
       for (Person person in persons) {
         List<PersonAgPreference> personAgPreferences =
-            await PersistenceManager().getPersonAgPreferences(person);
-        for (PersonAgPreference personAgPreference in personAgPreferences) {
-          if (personAgPreference.weekday == weekday) {
-            AG preferedAG = personAgPreference.ag;
-            //if the ag is already full, return a emtpy map
-            if (maxPersonTracker[preferedAG]! > 0) {
-              //if the ag still has slots left, put the person into it
-              selection[person]![weekday] = preferedAG;
-              //decrement maxPersonTracker
-              maxPersonTracker[preferedAG] = maxPersonTracker[preferedAG]! - 1;
-            } else {
-              return <Person, Map<String, AG>>{};
+            await persistenceManager.getPersonAgPreferences(person);
+        if (personAgPreferences.isNotEmpty) {
+          for (PersonAgPreference personAgPreference in personAgPreferences) {
+            if (personAgPreference.weekday == weekday &&
+                personAgPreference.preferenceNumber == 1) {
+              AG preferedAG = personAgPreference.ag;
+              //if the ag is already full or the ag does not exist in the tracker, return a emtpy map
+              if (maxPersonTracker.keys.contains(preferedAG.id) &&
+                  maxPersonTracker[preferedAG.id]! > 0) {
+                //if the ag still has slots left, put the person into it
+                selection =
+                    putInSelection(selection, person, weekday, preferedAG);
+                //decrement maxPersonTracker
+                maxPersonTracker[preferedAG.id] =
+                    maxPersonTracker[preferedAG.id]! - 1;
+              } else {
+                return <Person, Map<String, AG>>{};
+              }
             }
           }
+        } else {
+          return <Person, Map<String, AG>>{};
         }
       }
       //reset maxPersonTracker for the next weekday
@@ -61,7 +75,10 @@ class CreateSelection {
   /// the AGs are distributed based on the scores until all relevant weekdays are
   /// finished.
   Future<Map<Person, Map<String, AG>>> _tryScoring(
-      List<Person> persons, List<AG> ags, int numberOfPreferences) async {
+      PersistenceManager persistenceManager,
+      List<Person> persons,
+      List<AG> ags,
+      int numberOfPreferences) async {
     Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
 
     //shuffle persons, to give everybody the chance to be the first.
@@ -71,7 +88,7 @@ class CreateSelection {
     int scoreManipulator = numberOfPreferences ~/ 2;
 
     //max person tracker for tracking, if the ag still has slots left
-    Map<AG, int> maxPersonTracker = getMaxPersonTracker(ags);
+    Map<int, int> maxPersonTracker = getMaxPersonTracker(ags);
 
     //get all relevant weekdays
     Set<String> relevantWeekdays = getRelevantWeekdays(persons, ags);
@@ -90,21 +107,22 @@ class CreateSelection {
         //and filter them to be just the ones with the current weekday
         List<PersonAgPreference> personAgPreferences =
             getPersonAGPreferencesWithWeekday(
-                await PersistenceManager().getPersonAgPreferences(person),
+                await persistenceManager.getPersonAgPreferences(person),
                 weekday);
         AG? ag =
             getMostPossiblePreferedAG(maxPersonTracker, personAgPreferences);
         //didnt get an AG, so the persons score gets to be very high
         if (ag == null) {
-          selection[person] = {weekday: AG.createEmptyAG()};
+          selection =
+              putInSelection(selection, person, weekday, AG.createEmptyAG());
           preferenceScoring[person] =
               preferenceScoring[person]! + (scoreManipulator * 2);
         } else {
-          selection[person] = {weekday: ag};
+          selection = putInSelection(selection, person, weekday, ag);
           preferenceScoring[person] =
               preferenceScoring[person]! - scoreManipulator;
           //increment maxPersonTracker for AG
-          maxPersonTracker[ag] = maxPersonTracker[ag]! - 1;
+          maxPersonTracker[ag.id] = maxPersonTracker[ag.id]! - 1;
         }
       }
       //reset maxPersonTracker for the next weekday
@@ -113,6 +131,19 @@ class CreateSelection {
       persons = sortPersonsByScore(preferenceScoring);
     }
 
+    return selection;
+  }
+
+  Map<Person, Map<String, AG>> putInSelection(
+      Map<Person, Map<String, AG>> selection,
+      Person person,
+      String weekday,
+      AG ag) {
+    if (selection.keys.contains(person)) {
+      selection[person]!.putIfAbsent(weekday, () => ag);
+    } else {
+      selection.putIfAbsent(person, () => {weekday: ag});
+    }
     return selection;
   }
 
@@ -127,7 +158,7 @@ class CreateSelection {
 
   //get most prefered AG
   AG? getMostPossiblePreferedAG(
-      Map<AG, int> maxPersonTracker, List<PersonAgPreference> agPreferences) {
+      Map<int, int> maxPersonTracker, List<PersonAgPreference> agPreferences) {
     //sort List by preferenceNumber, so that it looks for the most prefered AG first
     agPreferences
         .sort((a, b) => a.preferenceNumber.compareTo(b.preferenceNumber));
@@ -136,7 +167,7 @@ class CreateSelection {
       AG ag = personAgPreference.ag;
       //if there is still room in that AG
       //return it
-      if (maxPersonTracker[ag] != null && maxPersonTracker[ag]! > 0) {
+      if (maxPersonTracker[ag.id] != null && maxPersonTracker[ag.id]! > 0) {
         return ag;
       }
     }
@@ -171,10 +202,10 @@ class CreateSelection {
   }
 
   //max person tracker for tracking, if the ag still has slots left
-  Map<AG, int> getMaxPersonTracker(ags) {
-    Map<AG, int> maxPersonTracker = <AG, int>{};
+  Map<int, int> getMaxPersonTracker(ags) {
+    Map<int, int> maxPersonTracker = {};
     for (AG ag in ags) {
-      maxPersonTracker[ag] = ag.maxPersons;
+      maxPersonTracker[ag.id] = ag.maxPersons;
     }
     return maxPersonTracker;
   }

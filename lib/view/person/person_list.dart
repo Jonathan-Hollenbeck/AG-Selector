@@ -6,9 +6,9 @@ import 'package:ag_selector/view/person/person_form.dart';
 import 'package:flutter/material.dart';
 
 class PersonList extends StatefulWidget {
-  final PersistenceManager persistendManager;
+  final PersistenceManager persistenceManager;
 
-  const PersonList({super.key, required this.persistendManager});
+  const PersonList({super.key, required this.persistenceManager});
 
   @override
   State<PersonList> createState() => _PersonListState();
@@ -27,27 +27,27 @@ class _PersonListState extends State<PersonList> {
   }
 
   void reloadAgs() async {
-    ags = await widget.persistendManager.loadAgs();
+    ags = await widget.persistenceManager.loadAgs();
     setState(() {});
   }
 
   void reloadPersons() async {
-    persons = await widget.persistendManager.loadPersons();
+    persons = await widget.persistenceManager.loadPersons();
     setState(() {});
   }
 
   void onPersonCreated(Person person) async {
-    widget.persistendManager.insertPerson(person);
+    widget.persistenceManager.insertPerson(person);
     reloadPersons();
   }
 
   void onPersonEdited(Person person) async {
-    widget.persistendManager.updatePerson(person);
+    widget.persistenceManager.updatePerson(person);
     reloadPersons();
   }
 
   void onPersonDeleted(Person person) async {
-    widget.persistendManager.deletePerson(person);
+    widget.persistenceManager.deletePerson(person);
     reloadPersons();
   }
 
@@ -65,7 +65,7 @@ class _PersonListState extends State<PersonList> {
                 onPersonDeleted: (Person person) {
                   onPersonDeleted(person);
                 },
-                persistenceManager: widget.persistendManager,
+                persistenceManager: widget.persistenceManager,
                 person: person,
                 createMode: createMode,
                 ags: ags,

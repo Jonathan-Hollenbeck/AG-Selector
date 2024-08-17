@@ -1,7 +1,4 @@
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
-import 'package:ag_selector/model/ag.dart';
-import 'package:ag_selector/model/person.dart';
-import 'package:ag_selector/model/settings.dart';
 import 'package:ag_selector/view/ag/ag_list.dart';
 import 'package:ag_selector/view/person/person_list.dart';
 import 'package:ag_selector/view/selector.dart';
@@ -16,30 +13,13 @@ class Tabs extends StatefulWidget {
 }
 
 class _TabsState extends State<Tabs> {
-  List<AG> ags = [];
-  List<Person> persons = [];
-
-  PersistenceManager persistendManager = PersistenceManager();
-
-  Settings settings = Settings(Settings.defaultNumberOfPreferences);
+  PersistenceManager persistenceManager = PersistenceManager();
 
   @override
   void initState() {
-    super.initState();
-    persistendManager.bindDatabase(persistendManager.getDefaultDatabasePath(),
+    persistenceManager.bindDatabase(persistenceManager.getDefaultDatabasePath(),
         PersistenceManager.defaultDatabaseName);
-  }
-
-  void setSettings(Settings settings) {
-    setState(() {
-      this.settings = settings;
-    });
-  }
-
-  void setPersons(List<Person> persons) {
-    setState(() {
-      this.persons = persons;
-    });
+    super.initState();
   }
 
   @override
@@ -62,16 +42,15 @@ class _TabsState extends State<Tabs> {
         body: TabBarView(
           children: [
             SettingsForm(
-              setSettings: setSettings,
-              settings: settings,
+              persistenceManager: persistenceManager,
             ),
             AGList(
-              persistendManager: persistendManager,
+              persistenceManager: persistenceManager,
             ),
             PersonList(
-              persistendManager: persistendManager,
+              persistenceManager: persistenceManager,
             ),
-            Selector(persons: persons, ags: ags, settings: settings),
+            Selector(persistenceManager: persistenceManager),
           ],
         ),
       ),

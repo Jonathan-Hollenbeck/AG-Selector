@@ -107,6 +107,17 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     super.initState();
 
     reloadPersonAgPreferences();
+    reloadSettings();
+  }
+
+  void reloadSettings() async {
+    settings = await widget.persistenceManager.loadSettings();
+
+    numberOfPreferencesList = StringUtils.getStringListPlusEmpty(
+        StringUtils.copyStringList(StringUtils.intListToStringList(
+            IntUtils.intToIntList(settings.numberOfPreferences)
+                .map((int value) => value + 1)
+                .toList())));
   }
 
   void reloadPersonAgPreferences() async {
@@ -129,12 +140,6 @@ class _SelectPreferencesState extends State<SelectPreferences> {
             .weekday] = personAgPreference.preferenceNumber.toString();
       }
     }
-
-    numberOfPreferencesList = StringUtils.getStringListPlusEmpty(
-        StringUtils.copyStringList(StringUtils.intListToStringList(
-            IntUtils.intToIntList(settings.numberOfPreferences)
-                .map((int value) => value + 1)
-                .toList())));
     setState(() {});
   }
 
