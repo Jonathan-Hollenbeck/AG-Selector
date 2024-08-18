@@ -41,12 +41,12 @@ class _PersonListState extends State<PersonList> {
     persons = await widget.persistenceManager
         .loadPersonsFilter(filterHouse, filterSchoolClass);
     persons.sort((a, b) => a.house.toLowerCase().compareTo(b.house));
+    filterHouseSet.add("Haus");
+    filterSchoolClassSet.add("Klasse");
     for (Person person in persons) {
       filterHouseSet.add(person.house);
       filterSchoolClassSet.add(person.schoolClass);
     }
-    filterHouseSet.add("Haus");
-    filterSchoolClassSet.add("Klasse");
     setState(() {});
   }
 

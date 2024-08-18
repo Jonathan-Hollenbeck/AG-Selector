@@ -111,6 +111,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     super.initState();
 
     //create map for view
+    filterWeekdaySet.add("Wochentag");
     for (AG ag in widget.ags) {
       for (String weekday in ag.weekdays) {
         filterWeekdaySet.add(weekday);
@@ -121,7 +122,6 @@ class _SelectPreferencesState extends State<SelectPreferences> {
         }
       }
     }
-    filterWeekdaySet.add("Wochentag");
 
     reloadSettings();
     reloadPersonAgPreferences();

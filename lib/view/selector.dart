@@ -73,21 +73,21 @@ class _SelectorListState extends State<Selector> {
 
   void reloadAgs() async {
     ags = await widget.persistenceManager.loadAgs();
+    filterAGSet.add("AG");
     for (AG ag in ags) {
       filterAGSet.add(ag.name);
     }
-    filterAGSet.add("AG");
     setState(() {});
   }
 
   void reloadPersons() async {
     persons = await widget.persistenceManager.loadPersons();
+    filterHouseSet.add("Haus");
+    filterSchoolClassSet.add("Klasse");
     for (Person person in persons) {
       filterHouseSet.add(person.house);
       filterSchoolClassSet.add(person.schoolClass);
     }
-    filterHouseSet.add("Haus");
-    filterSchoolClassSet.add("Klasse");
     setState(() {});
   }
 
