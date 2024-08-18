@@ -46,14 +46,14 @@ class PersistencePerson {
         personsMap = await database.query(tableName);
       } else if (house == "Haus") {
         personsMap = await database.query(tableName,
-            where: "$schoolClassDBField = '$schoolClass'");
+            where: "$schoolClassDBField = ?", whereArgs: [schoolClass]);
       } else if (schoolClass == "Klasse") {
-        personsMap =
-            await database.query(tableName, where: "$houseDBField = '$house'");
+        personsMap = await database
+            .query(tableName, where: "$houseDBField = ?", whereArgs: [house]);
       } else {
         personsMap = await database.query(tableName,
-            where:
-                "$houseDBField = '$house' AND $schoolClassDBField = '$schoolClass'");
+            where: "$houseDBField = ? AND $schoolClassDBField = ?",
+            whereArgs: [house, schoolClass]);
       }
       for (Map<String, Object?> personEntry in personsMap) {
         Person newPerson = fromObjectMap(personEntry);

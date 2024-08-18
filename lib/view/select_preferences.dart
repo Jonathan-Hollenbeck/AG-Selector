@@ -36,6 +36,10 @@ class _SelectPreferencesState extends State<SelectPreferences> {
 
   Settings settings = Settings(Settings.defaultNumberOfPreferences);
 
+  Set<String> filterWeekdaySet = {};
+
+  String filterWeekday = "Wochentag";
+
   void setAGPreference(AG ag, String weekday, String preferenceString) {
     setState(() {
       if (preferenceString != "") {
@@ -109,6 +113,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     //create map for view
     for (AG ag in widget.ags) {
       for (String weekday in ag.weekdays) {
+        filterWeekdaySet.add(weekday);
         if (agNWeekdayToPreference.keys.contains(ag.id)) {
           agNWeekdayToPreference[ag.id]!.putIfAbsent(weekday, () => "");
         } else {
@@ -116,6 +121,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
         }
       }
     }
+    filterWeekdaySet.add("Wochentag");
 
     reloadSettings();
     reloadPersonAgPreferences();
@@ -183,20 +189,30 @@ class _SelectPreferencesState extends State<SelectPreferences> {
               border: TableBorder.all(),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
-                const TableRow(children: [
-                  Text(
+                TableRow(children: [
+                  const Text(
                     "AG",
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
-                  Text(
-                    "Wochentag",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterWeekday,
+                    items: filterWeekdaySet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        setState(() {
+                          filterWeekday = value;
+                        });
+                      }
+                    },
                   ),
-                  Text(
+                  const Text(
                     "Präferenz",
                     textAlign: TextAlign.center,
                     style:
@@ -205,7 +221,9 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                 ]),
                 for (AG ag in widget.ags)
                   for (String weekday in ag.weekdays)
-                    if (agNWeekdayToPreference[ag.id] != null)
+                    if (agNWeekdayToPreference[ag.id] != null &&
+                        (filterWeekday == "Wochentag" ||
+                            filterWeekday == weekday))
                       TableRow(children: [
                         Text(ag.toShortString()),
                         Text(weekday),
