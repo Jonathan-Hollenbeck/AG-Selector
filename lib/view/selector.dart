@@ -1,4 +1,5 @@
 import 'package:ag_selector/controller/create_selection.dart';
+import 'package:ag_selector/controller/pdf_exporter.dart';
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
@@ -23,6 +24,8 @@ class _SelectorListState extends State<Selector> {
 
   List<Person> persons = [];
   List<AG> ags = [];
+
+  PdfExporter pdfExporter = PdfExporter();
 
   bool isInSelection(Person person, String weekday) {
     if (selection.keys.contains(person)) {
@@ -51,7 +54,6 @@ class _SelectorListState extends State<Selector> {
 
   void reloadAgs() async {
     ags = await widget.persistenceManager.loadAgs();
-
     setState(() {});
   }
 
@@ -85,6 +87,17 @@ class _SelectorListState extends State<Selector> {
                     },
                     child: const Text(
                       "Selektionsvorschlag generieren",
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      pdfExporter.generatePdf(selection, persons);
+                    },
+                    child: const Text(
+                      "Pdf exportieren",
                       style: TextStyle(fontSize: 16.0),
                     ),
                   ),

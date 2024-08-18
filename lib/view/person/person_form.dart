@@ -122,7 +122,7 @@ class _PersonFormState extends State<PersonForm> {
     }
 
     final Person newPerson = Person(
-        id: -1,
+        id: widget.person.id,
         name: name,
         house: house,
         schoolClass: schoolClass,

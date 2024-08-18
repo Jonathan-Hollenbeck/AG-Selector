@@ -37,6 +37,20 @@ class PersistencePerson {
     return persons;
   }
 
+  Future<List<Person>> loadFilter(
+      Database? database, String house, String schoolClass) async {
+    List<Person> persons = [];
+    if (database != null && database.isOpen) {
+      final List<Map<String, Object?>> personsMap =
+          await database.query(tableName);
+      for (Map<String, Object?> personEntry in personsMap) {
+        Person newPerson = fromObjectMap(personEntry);
+        persons.add(newPerson);
+      }
+    }
+    return persons;
+  }
+
   Future<int> insert(Database? database, Person person) async {
     int id = -1;
     if (database != null && database.isOpen) {

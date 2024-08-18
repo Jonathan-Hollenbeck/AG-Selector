@@ -93,7 +93,7 @@ class _AGFormState extends State<AGForm> {
     }
 
     final AG newAG = AG(
-        id: -1,
+        id: widget.ag.id,
         name: name,
         weekdays: weekdays,
         description: description,

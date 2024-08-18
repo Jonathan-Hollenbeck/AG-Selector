@@ -36,6 +36,7 @@ class PersistenceManager {
 
   Future<List<AG>> loadAgs() async {
     List<AG> ags = await persistenceAg.load(database);
+    ags.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return ags;
   }
 
@@ -58,6 +59,17 @@ class PersistenceManager {
 
   Future<List<Person>> loadPersons() async {
     List<Person> persons = await persistencePerson.load(database);
+    persons
+        .sort((a, b) => a.house.toLowerCase().compareTo(b.house.toLowerCase()));
+    return persons;
+  }
+
+  Future<List<Person>> loadPersonsFilter(
+      String house, String schoolClass) async {
+    List<Person> persons =
+        await persistencePerson.loadFilter(database, house, schoolClass);
+    persons
+        .sort((a, b) => a.house.toLowerCase().compareTo(b.house.toLowerCase()));
     return persons;
   }
 

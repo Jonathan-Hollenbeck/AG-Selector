@@ -28,11 +28,13 @@ class _PersonListState extends State<PersonList> {
 
   void reloadAgs() async {
     ags = await widget.persistenceManager.loadAgs();
+    ags.sort((a, b) => a.name.toLowerCase().compareTo(b.name));
     setState(() {});
   }
 
   void reloadPersons() async {
     persons = await widget.persistenceManager.loadPersons();
+    persons.sort((a, b) => a.house.toLowerCase().compareTo(b.house));
     setState(() {});
   }
 
