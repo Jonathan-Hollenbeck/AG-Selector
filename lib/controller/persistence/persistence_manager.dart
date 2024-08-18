@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:ag_selector/controller/persistence/persistence_ag.dart';
 import 'package:ag_selector/controller/persistence/persistence_person.dart';
@@ -24,7 +25,9 @@ class PersistenceManager {
   late PersistenceSettings persistenceSettings;
 
   PersistenceManager() {
-    sqfliteFfiInit();
+    if (Platform.isWindows) {
+      sqfliteFfiInit();
+    }
     databaseFactory = getDatabaseFactory();
     persistenceAg = PersistenceAg();
     persistencePerson = PersistencePerson();
@@ -201,10 +204,11 @@ class PersistenceManager {
     if (kIsWeb) {
       // Use web factory for web platform
       return databaseFactoryFfiWeb;
-    } else {
+    } else if (Platform.isWindows) {
       // Use sqfliteFfi factory for Windows platform
       return databaseFactoryFfi; // Assuming you're using sqflite_common_ffi
     }
     //else its the default for all other platforms
+    return databaseFactory;
   }
 }
