@@ -27,6 +27,16 @@ class _SelectorListState extends State<Selector> {
 
   PdfExporter pdfExporter = PdfExporter();
 
+  Set<String> filterHouseSet = {};
+  Set<String> filterSchoolClassSet = {};
+  Set<String> filterWeekdaySet = {};
+  Set<String> filterAGSet = {};
+
+  String filterHouse = "Haus";
+  String filterSchoolClass = "Klasse";
+  String filterWeekday = "Wochentag";
+  String filterAG = "AG";
+
   bool isInSelection(Person person, String weekday) {
     if (selection.keys.contains(person)) {
       if (selection[person]!.keys.contains(weekday)) {
@@ -39,7 +49,14 @@ class _SelectorListState extends State<Selector> {
   void createSelectionForPersons() async {
     selection = await createSelection.createSelection(
         widget.persistenceManager, persons, ags, settings.numberOfPreferences);
-    setState(() {});
+    setState(() {
+      for (Person person in selection.keys) {
+        for (String weekday in selection[person]!.keys) {
+          filterWeekdaySet.add(weekday);
+        }
+      }
+      filterWeekdaySet.add("Wochentag");
+    });
   }
 
   @override
@@ -49,16 +66,28 @@ class _SelectorListState extends State<Selector> {
     reloadPersons();
     reloadAgs();
     reloadSettings();
-    setState(() {});
+    setState(() {
+      filterWeekdaySet.add("Wochentag");
+    });
   }
 
   void reloadAgs() async {
     ags = await widget.persistenceManager.loadAgs();
+    for (AG ag in ags) {
+      filterAGSet.add(ag.name);
+    }
+    filterAGSet.add("AG");
     setState(() {});
   }
 
   void reloadPersons() async {
     persons = await widget.persistenceManager.loadPersons();
+    for (Person person in persons) {
+      filterHouseSet.add(person.house);
+      filterSchoolClassSet.add(person.schoolClass);
+    }
+    filterHouseSet.add("Haus");
+    filterSchoolClassSet.add("Klasse");
     setState(() {});
   }
 
@@ -108,42 +137,89 @@ class _SelectorListState extends State<Selector> {
               border: TableBorder.all(),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
-                const TableRow(children: [
-                  Text(
+                TableRow(children: [
+                  const Text(
                     "Person",
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
-                  Text(
-                    "Haus",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterHouse,
+                    items: filterHouseSet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        setState(() {
+                          filterHouse = value;
+                        });
+                      }
+                    },
                   ),
-                  Text(
-                    "Klasse",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterSchoolClass,
+                    items: filterSchoolClassSet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        setState(() {
+                          filterSchoolClass = value;
+                        });
+                      }
+                    },
                   ),
-                  Text(
-                    "Wochentag",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterWeekday,
+                    items: filterWeekdaySet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        setState(() {
+                          filterWeekday = value;
+                        });
+                      }
+                    },
                   ),
-                  Text(
-                    "AG",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterAG,
+                    items: filterAGSet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        setState(() {
+                          filterAG = value;
+                        });
+                      }
+                    },
                   ),
                 ]),
                 for (Person person in persons)
-                  if (selection[person] != null)
+                  if (selection[person] != null &&
+                      (filterHouse == "Haus" || filterHouse == person.house) &&
+                      (filterSchoolClass == "Klasse" ||
+                          filterSchoolClass == person.schoolClass))
                     for (String weekday in person.weekdaysPresent)
-                      if (isInSelection(person, weekday) == true)
+                      if (isInSelection(person, weekday) == true &&
+                          (filterWeekday == "Wochentag" ||
+                              filterWeekday == weekday) &&
+                          (filterAG == "AG" ||
+                              filterAG == selection[person]![weekday]!.name))
                         TableRow(children: [
                           Text(person.name),
                           Text(person.house),
