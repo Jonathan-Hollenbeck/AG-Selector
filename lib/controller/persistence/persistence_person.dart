@@ -41,8 +41,20 @@ class PersistencePerson {
       Database? database, String house, String schoolClass) async {
     List<Person> persons = [];
     if (database != null && database.isOpen) {
-      final List<Map<String, Object?>> personsMap =
-          await database.query(tableName);
+      List<Map<String, Object?>> personsMap = [];
+      if (house == "Haus" && schoolClass == "Klasse") {
+        personsMap = await database.query(tableName);
+      } else if (house == "Haus") {
+        personsMap = await database.query(tableName,
+            where: "$schoolClassDBField = '$schoolClass'");
+      } else if (schoolClass == "Klasse") {
+        personsMap =
+            await database.query(tableName, where: "$houseDBField = '$house'");
+      } else {
+        personsMap = await database.query(tableName,
+            where:
+                "$houseDBField = '$house' AND $schoolClassDBField = '$schoolClass'");
+      }
       for (Map<String, Object?> personEntry in personsMap) {
         Person newPerson = fromObjectMap(personEntry);
         persons.add(newPerson);

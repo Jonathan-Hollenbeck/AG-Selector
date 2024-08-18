@@ -16,8 +16,13 @@ class PersonList extends StatefulWidget {
 
 class _PersonListState extends State<PersonList> {
   List<Person> persons = [];
-
   List<AG> ags = [];
+
+  Set<String> filterHouseSet = {};
+  Set<String> filterSchoolClassSet = {};
+
+  String filterHouse = "Haus";
+  String filterSchoolClass = "Klasse";
 
   @override
   void initState() {
@@ -33,8 +38,15 @@ class _PersonListState extends State<PersonList> {
   }
 
   void reloadPersons() async {
-    persons = await widget.persistenceManager.loadPersons();
+    persons = await widget.persistenceManager
+        .loadPersonsFilter(filterHouse, filterSchoolClass);
     persons.sort((a, b) => a.house.toLowerCase().compareTo(b.house));
+    for (Person person in persons) {
+      filterHouseSet.add(person.house);
+      filterSchoolClassSet.add(person.schoolClass);
+    }
+    filterHouseSet.add("Haus");
+    filterSchoolClassSet.add("Klasse");
     setState(() {});
   }
 
@@ -99,32 +111,50 @@ class _PersonListState extends State<PersonList> {
               border: TableBorder.all(),
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
-                const TableRow(children: [
-                  Text(
+                TableRow(children: [
+                  const Text(
                     "Name",
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
-                  Text(
-                    "Haus",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterHouse,
+                    items: filterHouseSet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        filterHouse = value;
+                        reloadPersons();
+                      }
+                    },
                   ),
-                  Text(
-                    "Klasse",
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  DropdownButton(
+                    value: filterSchoolClass,
+                    items: filterSchoolClassSet
+                        .map<DropdownMenuItem<String>>(
+                          (String value) => DropdownMenuItem(
+                              value: value, child: Text(value)),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        filterSchoolClass = value;
+                        reloadPersons();
+                      }
+                    },
                   ),
-                  Text(
+                  const Text(
                     "Wochentage",
                     textAlign: TextAlign.center,
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
-                  Text(
+                  const Text(
                     "Bearbeiten",
                     textAlign: TextAlign.center,
                     style:
