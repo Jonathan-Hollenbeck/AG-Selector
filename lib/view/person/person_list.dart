@@ -1,6 +1,7 @@
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
+import 'package:ag_selector/model/person_ag_preference.dart';
 import 'package:ag_selector/model/weekdays.dart';
 import 'package:ag_selector/view/person/person_form.dart';
 import 'package:flutter/material.dart';
@@ -50,13 +51,30 @@ class _PersonListState extends State<PersonList> {
     setState(() {});
   }
 
-  void onPersonCreated(Person person) async {
-    widget.persistenceManager.insertPerson(person);
+  void onPersonCreated(
+      Person person, List<PersonAgPreference> personAgPreferences) async {
+    int id = await widget.persistenceManager.insertPerson(person);
+    person.id = id;
+
+    widget.persistenceManager.deletePersonAgPreferencesForPerson(person);
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      personAgPreference.person = person;
+      widget.persistenceManager.insertPersonAgPreference(personAgPreference);
+    }
+
     reloadPersons();
   }
 
-  void onPersonEdited(Person person) async {
+  void onPersonEdited(
+      Person person, List<PersonAgPreference> personAgPreferences) async {
     widget.persistenceManager.updatePerson(person);
+
+    widget.persistenceManager.deletePersonAgPreferencesForPerson(person);
+    for (PersonAgPreference personAgPreference in personAgPreferences) {
+      personAgPreference.person = person;
+      widget.persistenceManager.insertPersonAgPreference(personAgPreference);
+    }
+
     reloadPersons();
   }
 
@@ -70,15 +88,9 @@ class _PersonListState extends State<PersonList> {
       context,
       MaterialPageRoute(
           builder: (context) => PersonForm(
-                onPersonCreated: (Person person) {
-                  onPersonCreated(person);
-                },
-                onPersonEdited: (Person person) {
-                  onPersonEdited(person);
-                },
-                onPersonDeleted: (Person person) {
-                  onPersonDeleted(person);
-                },
+                onPersonCreated: onPersonCreated,
+                onPersonEdited: onPersonEdited,
+                onPersonDeleted: onPersonDeleted,
                 persistenceManager: widget.persistenceManager,
                 person: person,
                 createMode: createMode,

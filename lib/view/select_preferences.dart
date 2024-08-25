@@ -8,20 +8,23 @@ import 'package:ag_selector/util/string_utils.dart';
 import 'package:flutter/material.dart';
 
 class SelectPreferences extends StatefulWidget {
+  final Function(List<PersonAgPreference>) setPersonAgPreferences;
+
   final PersistenceManager persistenceManager;
 
   final Person person;
 
   final List<AG> ags;
 
-  final List<String> weekdaysPresent;
+  final List<PersonAgPreference> personAgPreferences;
 
   const SelectPreferences(
       {super.key,
       required this.ags,
-      required this.weekdaysPresent,
       required this.persistenceManager,
-      required this.person});
+      required this.person,
+      required this.setPersonAgPreferences,
+      required this.personAgPreferences});
 
   @override
   State<SelectPreferences> createState() => _SelectPreferencesState();
@@ -125,6 +128,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
 
     reloadSettings();
     reloadPersonAgPreferences();
+    setState(() {});
   }
 
   void reloadSettings() async {
@@ -135,11 +139,11 @@ class _SelectPreferencesState extends State<SelectPreferences> {
             IntUtils.intToIntList(settings.numberOfPreferences)
                 .map((int value) => value + 1)
                 .toList())));
+    setState(() {});
   }
 
   void reloadPersonAgPreferences() async {
-    personAgPreferences =
-        await widget.persistenceManager.getPersonAgPreferences(widget.person);
+    personAgPreferences = widget.personAgPreferences;
 
     List<PersonAgPreference> removeList = [];
     for (PersonAgPreference personAgPreference in personAgPreferences) {
@@ -167,10 +171,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
 
   // Function called when form is submitted
   void _submitForm() {
-    widget.persistenceManager.deletePersonAgPreferencesForPerson(widget.person);
-    for (PersonAgPreference personAgPreference in personAgPreferences) {
-      widget.persistenceManager.insertPersonAgPreference(personAgPreference);
-    }
+    widget.setPersonAgPreferences(personAgPreferences);
     Navigator.pop(context);
   }
 
@@ -220,8 +221,9 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                   ),
                 ]),
                 for (AG ag in widget.ags)
-                  for (String weekday in ag.weekdays)
+                  for (String weekday in widget.person.weekdaysPresent)
                     if (agNWeekdayToPreference[ag.id] != null &&
+                        agNWeekdayToPreference[ag.id]![weekday] != null &&
                         (filterWeekday == "Wochentag" ||
                             filterWeekday == weekday))
                       TableRow(children: [

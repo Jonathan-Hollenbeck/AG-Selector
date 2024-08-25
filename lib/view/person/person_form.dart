@@ -1,14 +1,15 @@
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
+import 'package:ag_selector/model/person_ag_preference.dart';
 import 'package:ag_selector/util/string_utils.dart';
 import 'package:ag_selector/view/select_preferences.dart';
 import 'package:ag_selector/view/select_weekdays.dart';
 import 'package:flutter/material.dart';
 
 class PersonForm extends StatefulWidget {
-  final Function(Person) onPersonCreated;
-  final Function(Person) onPersonEdited;
+  final Function(Person, List<PersonAgPreference>) onPersonCreated;
+  final Function(Person, List<PersonAgPreference>) onPersonEdited;
   final Function(Person) onPersonDeleted;
 
   final PersistenceManager persistenceManager;
@@ -40,6 +41,7 @@ class _PersonFormState extends State<PersonForm> {
   final _schoolClassController = TextEditingController();
 
   List<String> weekdaysPresent = [];
+  List<PersonAgPreference> personAgPreferences = [];
 
   @override
   void initState() {
@@ -49,6 +51,22 @@ class _PersonFormState extends State<PersonForm> {
     _schoolClassController.text = widget.person.schoolClass;
 
     weekdaysPresent = widget.person.weekdaysPresent;
+
+    reloadPersonAgPreferences();
+  }
+
+  void reloadPersonAgPreferences() async {
+    if (widget.person.id == -1) {
+      personAgPreferences = [];
+    } else {
+      personAgPreferences =
+          await widget.persistenceManager.getPersonAgPreferences(widget.person);
+    }
+  }
+
+  void setPersonAgPreferences(
+      List<PersonAgPreference> personAgPreferencesParam) {
+    personAgPreferences = personAgPreferencesParam;
   }
 
   void onWeekdaysSelected(List<String> weekdaysPresent) {
@@ -77,8 +95,9 @@ class _PersonFormState extends State<PersonForm> {
           builder: (context) => SelectPreferences(
                 persistenceManager: widget.persistenceManager,
                 ags: getAGsBasedOnWeekdaysPresent(widget.ags, weekdaysPresent),
-                weekdaysPresent: weekdaysPresent,
                 person: widget.person,
+                setPersonAgPreferences: setPersonAgPreferences,
+                personAgPreferences: personAgPreferences,
               )),
     );
   }
@@ -129,12 +148,12 @@ class _PersonFormState extends State<PersonForm> {
         weekdaysPresent: weekdaysPresent);
 
     if (widget.createMode == true) {
-      widget.onPersonCreated(newPerson);
+      widget.onPersonCreated(newPerson, personAgPreferences);
       setState(() {
         _nameController.text = "";
       });
     } else {
-      widget.onPersonEdited(newPerson);
+      widget.onPersonEdited(newPerson, personAgPreferences);
       Navigator.pop(context);
     }
   }
