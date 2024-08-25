@@ -120,11 +120,13 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     filterWeekdaySet.add("Wochentag");
     for (AG ag in widget.ags) {
       for (String weekday in ag.weekdays) {
-        filterWeekdaySet.add(weekday);
-        if (agNWeekdayToPreference.keys.contains(ag.id)) {
-          agNWeekdayToPreference[ag.id]!.putIfAbsent(weekday, () => "");
-        } else {
-          agNWeekdayToPreference.putIfAbsent(ag.id, () => {weekday: ""});
+        if (widget.weekdaysPresent.contains(weekday)) {
+          filterWeekdaySet.add(weekday);
+          if (agNWeekdayToPreference.keys.contains(ag.id)) {
+            agNWeekdayToPreference[ag.id]!.putIfAbsent(weekday, () => "");
+          } else {
+            agNWeekdayToPreference.putIfAbsent(ag.id, () => {weekday: ""});
+          }
         }
       }
     }
