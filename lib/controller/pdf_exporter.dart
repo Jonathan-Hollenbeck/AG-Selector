@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:permission_handler/permission_handler.dart';
 
 class PdfExporter {
-  Future<void> generatePdf(
+  Future<bool> generatePdf(
       Map<Person, Map<String, AG>> selection, List<Person> persons) async {
     Set<String> houses = {};
     for (Person person in persons) {
@@ -100,15 +101,22 @@ class PdfExporter {
         }
       }
     }
-    String? outputFile = await FilePicker.platform.saveFile(
-      dialogTitle: 'Speichern',
-      fileName: 'AG_Auswahl.pdf',
-    );
+    try {
+      final storageStatus = await Permission.storage.request();
 
-    if (outputFile != null) {
-      final file = File(outputFile);
-      await file.writeAsBytes(await pdf.save());
+      if (storageStatus.isGranted) {
+        //Permission granted, proceed with saving the file
+        final Directory documentsDirectory =
+            await getApplicationDocumentsDirectory();
+
+        final file = File("${documentsDirectory.path}/AG_Selection.pdf");
+        await file.writeAsBytes(await pdf.save());
+        return true;
+      }
+    } catch (e) {
+      return false;
     }
+    return false;
   }
 
   bool isPersonWithHouseNSchoolClassInPersons(

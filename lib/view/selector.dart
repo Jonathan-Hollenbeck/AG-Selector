@@ -96,6 +96,43 @@ class _SelectorListState extends State<Selector> {
     setState(() {});
   }
 
+  void savePDF() async {
+    bool success = await pdfExporter.generatePdf(selection, persons);
+    if (success == true) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('PDF speichern'),
+            content: const Text('PDF erfolgreich gespeichert.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('PDF speichern'),
+            content: const Text('Fehler beim speichern des PDFs.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,7 +160,7 @@ class _SelectorListState extends State<Selector> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      pdfExporter.generatePdf(selection, persons);
+                      savePDF();
                     },
                     child: const Text(
                       "Pdf exportieren",
