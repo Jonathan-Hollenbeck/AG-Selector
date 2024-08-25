@@ -14,6 +14,8 @@ class SelectPreferences extends StatefulWidget {
 
   final Person person;
 
+  final List<String> weekdaysPresent;
+
   final List<AG> ags;
 
   final List<PersonAgPreference> personAgPreferences;
@@ -24,7 +26,8 @@ class SelectPreferences extends StatefulWidget {
       required this.persistenceManager,
       required this.person,
       required this.setPersonAgPreferences,
-      required this.personAgPreferences});
+      required this.personAgPreferences,
+      required this.weekdaysPresent});
 
   @override
   State<SelectPreferences> createState() => _SelectPreferencesState();
@@ -221,7 +224,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                   ),
                 ]),
                 for (AG ag in widget.ags)
-                  for (String weekday in widget.person.weekdaysPresent)
+                  for (String weekday in widget.weekdaysPresent)
                     if (agNWeekdayToPreference[ag.id] != null &&
                         agNWeekdayToPreference[ag.id]![weekday] != null &&
                         (filterWeekday == "Wochentag" ||

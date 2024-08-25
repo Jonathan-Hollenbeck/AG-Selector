@@ -80,9 +80,7 @@ class _PersonFormState extends State<PersonForm> {
       context,
       MaterialPageRoute(
           builder: (context) => SelectWeekdaysForm(
-                onWeekdaysSelected: (weekdays) {
-                  onWeekdaysSelected(weekdays);
-                },
+                onWeekdaysSelected: onWeekdaysSelected,
                 weekdays: weekdaysPresent,
               )),
     );
@@ -98,6 +96,7 @@ class _PersonFormState extends State<PersonForm> {
                 person: widget.person,
                 setPersonAgPreferences: setPersonAgPreferences,
                 personAgPreferences: personAgPreferences,
+                weekdaysPresent: weekdaysPresent,
               )),
     );
   }
