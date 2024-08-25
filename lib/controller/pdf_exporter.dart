@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -99,9 +100,15 @@ class PdfExporter {
         }
       }
     }
+    String? outputFile = await FilePicker.platform.saveFile(
+      dialogTitle: 'Speichern',
+      fileName: 'AG_Auswahl.pdf',
+    );
 
-    final file = File('AG_Auswahl.pdf');
-    await file.writeAsBytes(await pdf.save());
+    if (outputFile != null) {
+      final file = File(outputFile);
+      await file.writeAsBytes(await pdf.save());
+    }
   }
 
   bool isPersonWithHouseNSchoolClassInPersons(
