@@ -97,8 +97,8 @@ class _SelectorListState extends State<Selector> {
   }
 
   void savePDF() async {
-    bool success = await pdfExporter.generatePdf(selection, persons);
-    if (success == true) {
+    final String? success = await pdfExporter.generatePdf(selection, persons);
+    if (success == null) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -120,7 +120,7 @@ class _SelectorListState extends State<Selector> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('PDF speichern'),
-            content: const Text('Fehler beim speichern des PDFs.'),
+            content: Text('Fehler beim speichern des PDFs:\n$success'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),

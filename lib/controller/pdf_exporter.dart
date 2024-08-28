@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 
 class PdfExporter {
-  Future<bool> generatePdf(
+  Future<String?> generatePdf(
       Map<Person, Map<String, AG>> selection, List<Person> persons) async {
     Set<String> houses = {};
     for (Person person in persons) {
@@ -102,21 +102,33 @@ class PdfExporter {
       }
     }
     try {
-      final storageStatus = await Permission.storage.request();
+      //Android Version <11
+      PermissionStatus storageStatus = await Permission.storage.status;
+      if (!storageStatus.isGranted) {
+        storageStatus = await Permission.storage.request();
+        //Android Version >11
+        if (!storageStatus.isGranted) {
+          storageStatus = await Permission.manageExternalStorage.status;
+          if (!storageStatus.isGranted) {
+            storageStatus = await Permission.manageExternalStorage.request();
+          }
+        }
+      }
 
       if (storageStatus.isGranted) {
         //Permission granted, proceed with saving the file
-        final Directory documentsDirectory =
-            await getApplicationDocumentsDirectory();
+        final String? selectedDirectory =
+            await FilePicker.platform.getDirectoryPath();
 
-        final file = File("${documentsDirectory.path}/AG_Selection.pdf");
+        final file = File("$selectedDirectory/AG_Selection.pdf");
         await file.writeAsBytes(await pdf.save());
-        return true;
+        return null;
+      } else {
+        return "Dateispeicherung nicht erlaubt! Dateistatus: ${storageStatus.toString()}";
       }
     } catch (e) {
-      return false;
+      return e.toString();
     }
-    return false;
   }
 
   bool isPersonWithHouseNSchoolClassInPersons(
