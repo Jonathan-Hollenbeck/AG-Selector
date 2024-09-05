@@ -204,7 +204,7 @@ class PersistenceManager {
     if (kIsWeb) {
       // Use web factory for web platform
       return databaseFactoryFfiWeb;
-    } else if (Platform.isWindows) {
+    } else if (Platform.isWindows || Platform.isLinux) {
       // Use sqfliteFfi factory for Windows platform
       return databaseFactoryFfi; // Assuming you're using sqflite_common_ffi
     }
