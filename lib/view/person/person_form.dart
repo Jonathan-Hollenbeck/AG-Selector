@@ -136,7 +136,7 @@ class _PersonFormState extends State<PersonForm> {
           );
         },
       );
-      return; // Handle empty fields (optional)
+      return;
     }
 
     final Person newPerson = Person(
@@ -150,6 +150,7 @@ class _PersonFormState extends State<PersonForm> {
       widget.onPersonCreated(newPerson, personAgPreferences);
       setState(() {
         _nameController.text = "";
+        personAgPreferences = [];
       });
     } else {
       widget.onPersonEdited(newPerson, personAgPreferences);
@@ -158,7 +159,30 @@ class _PersonFormState extends State<PersonForm> {
   }
 
   void _deletePerson() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sicher?'),
+          content: const Text('Wollen Sie wirklich diese Person löschen?'),
+          actions: [
+            TextButton(
+              onPressed: () => _deletePersonIntern(widget.person),
+              child: const Text('Ja'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Nein'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deletePersonIntern(Person person){
     widget.onPersonDeleted(widget.person); // Call callback with delete person
+    Navigator.pop(context);
     Navigator.pop(context);
   }
 
