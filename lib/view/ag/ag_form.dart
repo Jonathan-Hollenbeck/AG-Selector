@@ -113,7 +113,30 @@ class _AGFormState extends State<AGForm> {
   }
 
   void _deleteAG() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sicher?'),
+          content: const Text('Wollen Sie wirklich diese AG löschen?'),
+          actions: [
+            TextButton(
+              onPressed: () => _deleteAGIntern(widget.ag),
+              child: const Text('Ja'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Nein'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteAGIntern(AG ag){
     widget.onAGdDeleted(widget.ag); // Call callback with delete ag
+    Navigator.pop(context);
     Navigator.pop(context);
   }
 
