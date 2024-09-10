@@ -225,8 +225,8 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
                 ]),
-                for (int i = 0; i < widget.ags.length; i++)
-                  for (String weekday in widget.weekdaysPresent)
+                for (String weekday in widget.weekdaysPresent)
+                  for (int i = 0; i < widget.ags.length; i++)
                     if (agNWeekdayToPreference[widget.ags[i].id] != null &&
                         agNWeekdayToPreference[widget.ags[i].id]![weekday] != null &&
                         (filterWeekday == "Wochentag" ||
