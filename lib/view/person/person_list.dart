@@ -92,6 +92,34 @@ class _PersonListState extends State<PersonList> {
     reloadPersons();
   }
 
+  void deletePerson(Person person){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sicher?'),
+          content: const Text('Wollen Sie wirklich diese Person löschen?'),
+          actions: [
+            TextButton(
+              onPressed: () => deletePersonIntern(person),
+              child: const Text('Ja'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Nein'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deletePersonIntern(Person person) {
+    widget.persistenceManager.deletePerson(person);
+    Navigator.pop(context);
+    reloadPersons();
+  }
+
   void onPersonDeleted(Person person) async {
     widget.persistenceManager.deletePerson(person);
     reloadPersons();
@@ -135,6 +163,38 @@ class _PersonListState extends State<PersonList> {
     return "";
   }
 
+  void deleteAllPreferences(){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sicher?'),
+          content: const Text('Wollen Sie wirklich alle Präferenzen löschen?'),
+          actions: [
+            TextButton(
+              onPressed: () => deleteAllPreferencesIntern(),
+              child: const Text('Ja'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Nein'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deleteAllPreferencesIntern() async {
+    for(Person person in persons){
+      await widget.persistenceManager.deletePersonAgPreferencesForPerson(person);
+    }
+    setState(() {
+      Navigator.pop(context);
+      reloadPersonAgPreferences();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,14 +206,28 @@ class _PersonListState extends State<PersonList> {
           child: SingleChildScrollView(
         child: Column(
           children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-              ),
-              onPressed: () {
-                openPersonForm(Person.createEmptyPerson(), true);
-              },
-              child: const Icon(Icons.add),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    openPersonForm(Person.createEmptyPerson(), true);
+                  },
+                  child: const Icon(Icons.add),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    deleteAllPreferences();
+                  },
+                  child: const Text("Alle Präferenzen löschen"),
+                ),
+              ]
             ),
             Table(
               border: TableBorder.all(),
@@ -214,6 +288,12 @@ class _PersonListState extends State<PersonList> {
                     style:
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
+                  const Text(
+                    "Löschen",
+                    textAlign: TextAlign.center,
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  ),
                 ]),
                 for (Person person in persons)
                   TableRow(children: [
@@ -228,7 +308,12 @@ class _PersonListState extends State<PersonList> {
                         onPressed: () {
                           openPersonForm(person, false);
                         },
-                        child: const Icon(Icons.edit))
+                        child: const Icon(Icons.edit)),
+                    ElevatedButton(
+                        onPressed: () {
+                          deletePerson(person);
+                        },
+                        child: const Icon(Icons.delete))
                   ])
               ],
             ),
