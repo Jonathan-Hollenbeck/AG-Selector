@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/util/string_utils.dart';
 import 'package:ag_selector/view/select_weekdays.dart';
@@ -162,6 +164,36 @@ class _AGFormState extends State<AGForm> {
     );
   }
 
+  Future displayTimePicker(BuildContext context, DateTime dateTime, Function dateTimeSetter) async {
+    var time = await showTimePicker(
+        context: context,
+        initialTime: dateTimeToTimeOfDay(dateTime));
+
+    if (time != null) {
+      setState(() {
+        dateTimeSetter(timeOfDayToDateTime(time));
+      });
+    }
+  }
+
+  void setStartTime(DateTime dateTime){
+    startTime = dateTime;
+  }
+
+  void setEndTime(DateTime dateTime){
+    endTime = dateTime;
+  }
+
+  TimeOfDay dateTimeToTimeOfDay(DateTime dateTime){
+    TimeOfDay time = TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
+    return time;
+  }
+
+  DateTime timeOfDayToDateTime(TimeOfDay time){
+    DateTime dateTime = DateTime(1970, 1, 1, time.hour, time.minute);
+    return dateTime;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,58 +230,70 @@ class _AGFormState extends State<AGForm> {
               Row(
                 children: [
                   const Text("Anfangszeit"),
-                  CupertinoButton(
-                    // Display a CupertinoDatePicker in date picker mode.
-                    onPressed: () => _showDialog(
-                      CupertinoDatePicker(
-                        initialDateTime: startTime,
-                        mode: CupertinoDatePickerMode.time,
-                        use24hFormat: true,
-                        // This is called when the user changes the date.
-                        onDateTimeChanged: (DateTime newTime) {
-                          setState(() => startTime = newTime);
-                        },
+                  if(Platform.isLinux || Platform.isWindows || Platform.isMacOS)
+                    ElevatedButton(
+                      onPressed: () => displayTimePicker(context, startTime, setStartTime),
+                      child: Text(StringUtils.timeToString(startTime.hour, startTime.minute))
+                      )
+                  else
+                    CupertinoButton(
+                      // Display a CupertinoDatePicker in date picker mode.
+                      onPressed: () => _showDialog(
+                        CupertinoDatePicker(
+                          initialDateTime: startTime,
+                          mode: CupertinoDatePickerMode.time,
+                          use24hFormat: true,
+                          // This is called when the user changes the date.
+                          onDateTimeChanged: (DateTime newTime) {
+                            setState(() => startTime = newTime);
+                          },
+                        ),
+                      ),
+                      // In this example, the date is formatted manually. You can
+                      // use the intl package to format the value based on the
+                      // user's locale settings.
+                      child: Text(
+                        StringUtils.timeToString(
+                            startTime.hour, startTime.minute),
+                        style: const TextStyle(
+                          fontSize: 22.0,
+                        ),
                       ),
                     ),
-                    // In this example, the date is formatted manually. You can
-                    // use the intl package to format the value based on the
-                    // user's locale settings.
-                    child: Text(
-                      StringUtils.timeToString(
-                          startTime.hour, startTime.minute),
-                      style: const TextStyle(
-                        fontSize: 22.0,
-                      ),
-                    ),
-                  ),
                 ],
               ),
               Row(
                 children: [
                   const Text("Endzeit"),
-                  CupertinoButton(
-                    // Display a CupertinoDatePicker in date picker mode.
-                    onPressed: () => _showDialog(
-                      CupertinoDatePicker(
-                        initialDateTime: endTime,
-                        mode: CupertinoDatePickerMode.time,
-                        use24hFormat: true,
-                        // This is called when the user changes the date.
-                        onDateTimeChanged: (DateTime newTime) {
-                          setState(() => endTime = newTime);
-                        },
+                  if(Platform.isLinux || Platform.isWindows || Platform.isMacOS)
+                    ElevatedButton(
+                      onPressed: () => displayTimePicker(context, endTime, setEndTime),
+                      child: Text(StringUtils.timeToString(endTime.hour, endTime.minute))
+                      )
+                  else
+                    CupertinoButton(
+                      // Display a CupertinoDatePicker in date picker mode.
+                      onPressed: () => _showDialog(
+                        CupertinoDatePicker(
+                          initialDateTime: endTime,
+                          mode: CupertinoDatePickerMode.time,
+                          use24hFormat: true,
+                          // This is called when the user changes the date.
+                          onDateTimeChanged: (DateTime newTime) {
+                            setState(() => endTime = newTime);
+                          },
+                        ),
+                      ),
+                      // In this example, the date is formatted manually. You can
+                      // use the intl package to format the value based on the
+                      // user's locale settings.
+                      child: Text(
+                        StringUtils.timeToString(endTime.hour, endTime.minute),
+                        style: const TextStyle(
+                          fontSize: 22.0,
+                        ),
                       ),
                     ),
-                    // In this example, the date is formatted manually. You can
-                    // use the intl package to format the value based on the
-                    // user's locale settings.
-                    child: Text(
-                      StringUtils.timeToString(endTime.hour, endTime.minute),
-                      style: const TextStyle(
-                        fontSize: 22.0,
-                      ),
-                    ),
-                  ),
                 ],
               ),
               TextFormField(
