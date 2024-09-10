@@ -97,7 +97,7 @@ class _SelectorListState extends State<Selector> {
   }
 
   void savePDF() async {
-    final String? success = await pdfExporter.generatePdf(selection, persons, widget.persistenceManager);
+    final String? success = await pdfExporter.generatePdf(selection, persons, ags, widget.persistenceManager);
     if (success == null) {
       showDialog(
         context: context,

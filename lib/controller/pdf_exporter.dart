@@ -3,6 +3,7 @@ import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
+import 'package:ag_selector/util/string_utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -24,8 +25,17 @@ class PdfExporter {
     return "${person.schoolClass}${person.house}";
   }
 
+  AG? getAgById(int id, List<AG> ags){
+    for(AG ag in ags){
+      if(ag.id == id){
+        return ag;
+      }
+    }
+    return null;
+  }
+
   Future<String?> generatePdf(
-      Map<Person, Map<String, AG>> selection, List<Person> persons, PersistenceManager persistenceManager) async {
+      Map<Person, Map<String, AG>> selection, List<Person> persons, List<AG> ags, PersistenceManager persistenceManager) async {
 
     agPdfColorCounter = 0;
 
@@ -34,22 +44,22 @@ class PdfExporter {
     List<Person> selectionKeysSorted = selection.keys.toList();
     selectionKeysSorted.sort((a, b) => combineHouseAndClass(a).compareTo(combineHouseAndClass(b)));
 
-    Map<String, Map<String, int>> agPreferenceCounter = {};
+    Map<int, Map<String, int>> agPreferenceCounter = {};
 
     for(Person person in selection.keys){
       List<PersonAgPreference> personAgPreferences = await persistenceManager.getPersonAgPreferences(person);
       for(PersonAgPreference personAgPreference in personAgPreferences){
-        String agName = personAgPreference.ag.name;
+        int agId = personAgPreference.ag.id;
         String weekday = personAgPreference.weekday;
         int preference = personAgPreference.preferenceNumber;
         if(preference == 1){
-          if(!agPreferenceCounter.keys.contains(agName)){
-            agPreferenceCounter[agName] = {};
+          if(!agPreferenceCounter.keys.contains(agId)){
+            agPreferenceCounter[agId] = {};
           }
-          if(!agPreferenceCounter[agName]!.keys.contains(weekday)){
-            agPreferenceCounter[agName]![weekday] = 0;
+          if(!agPreferenceCounter[agId]!.keys.contains(weekday)){
+            agPreferenceCounter[agId]![weekday] = 0;
           }
-          agPreferenceCounter[agName]![weekday] = agPreferenceCounter[agName]![weekday]! + 1;
+          agPreferenceCounter[agId]![weekday] = agPreferenceCounter[agId]![weekday]! + 1;
         }
       }
     }
@@ -59,10 +69,10 @@ class PdfExporter {
       houses.add(person.house);
     }
 
-    Set<String> agNames = {};
+    Set<int> agIds = {};
     for (Person person in selection.keys) {
       for(String weekday in selection[person]!.keys){
-        agNames.add(selection[person]![weekday]!.name);
+        agIds.add(selection[person]![weekday]!.id);
       }
     }
 
@@ -160,73 +170,99 @@ class PdfExporter {
 
     final pdfAg = pw.Document();
 
-    for (String agName in agNames) {
-      pdfAg.addPage(
-        pw.MultiPage(
-            pageFormat: PdfPageFormat.a4,
-            build: (context) => [
-                pw.Text(
-                  agName,
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold, fontSize: 20.0, font: font),
-                ),
-                pw.Center(
-                    child: pw.Table(
-                        border: pw.TableBorder.all(),
-                        defaultVerticalAlignment:
-                            pw.TableCellVerticalAlignment.middle,
-                        children: [
-                      pw.TableRow(children: [
-                        pw.Text(
-                          "Person",
-                          textAlign: pw.TextAlign.center,
-                          style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 16.0, font: font),
-                        ),
-                        pw.Text(
-                          "Klasse",
-                          textAlign: pw.TextAlign.center,
-                          style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 16.0, font: font),
-                        ),
-                        pw.Text(
-                          "Wochentag",
-                          textAlign: pw.TextAlign.center,
-                          style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 16.0, font: font),
-                        ),
-                      ]),
-                      for (Person person in selectionKeysSorted)
-                        for(String weekday in selection[person]!.keys)
-                          if(checkIfPersonInAg(selection, person, weekday, agName))
-                              pw.TableRow(
-                                  decoration: pw.BoxDecoration(
-                                      color: PdfColor(
-                                          1.0 - (((agPdfColorCounter % 2) / 10) * 2),
-                                          1.0 - (((agPdfColorCounter % 2) / 10) * 2),
-                                          1.0 - (((agPdfColorCounter % 2) / 10) * 2))),
-                                  children: [
-                                    pw.Text(person.name,
-                                        textAlign: pw.TextAlign.center,
-                                        style: pw.TextStyle(font: font)),
-                                    pw.Text(
-                                      person.schoolClass,
-                                      textAlign: pw.TextAlign.center,
-                                      style: pw.TextStyle(font: font)
-                                    ),
-                                    pw.Text(
-                                      weekday,
-                                      textAlign: pw.TextAlign.center,
-                                      style: pw.TextStyle(font: font)
-                                    ),
-                                  ])
-                    ])),
-                ]),
-          );
+    for (int agId in agIds) {
+      AG? currentAG = getAgById(agId, ags);
+      if(currentAG != null){
+        for(String weekdayLoop in currentAG.weekdays){
+          pdfAg.addPage(
+            pw.MultiPage(
+              orientation: pw.PageOrientation.landscape,
+                pageFormat: PdfPageFormat.a4,
+                build: (context) => [
+                    pw.Text(
+                      "${currentAG.name} $weekdayLoop (${StringUtils.timeToString(currentAG.startTime.hour, currentAG.startTime.minute)} - ${StringUtils.timeToString(currentAG.endTime.hour, currentAG.endTime.minute)})",
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 20.0, font: font),
+                    ),
+                    pw.Center(
+                        child: pw.Table(
+                            border: pw.TableBorder.all(),
+                            defaultVerticalAlignment:
+                                pw.TableCellVerticalAlignment.middle,
+                            children: [
+                          pw.TableRow(children: [
+                            pw.Text(
+                              "Person",
+                              textAlign: pw.TextAlign.center,
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 16.0, font: font),
+                            ),
+                            pw.Text(
+                              "Klasse",
+                              textAlign: pw.TextAlign.center,
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 16.0, font: font),
+                            ),
+                            pw.Text(
+                              "Wochentag",
+                              textAlign: pw.TextAlign.center,
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 16.0, font: font),
+                            ),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                            pw.Text("______" , textAlign: pw.TextAlign.center),
+                          ]),
+                          for (Person person in selectionKeysSorted)
+                            for(String weekday in selection[person]!.keys)
+                              if(checkIfPersonInAg(selection, person, weekday, currentAG.name) && weekdayLoop == weekday)
+                                  pw.TableRow(
+                                      decoration: pw.BoxDecoration(
+                                          color: PdfColor(
+                                              1.0 - (((agPdfColorCounter % 2) / 10) * 2),
+                                              1.0 - (((agPdfColorCounter % 2) / 10) * 2),
+                                              1.0 - (((agPdfColorCounter % 2) / 10) * 2))),
+                                      children: [
+                                        pw.Text(person.name,
+                                            textAlign: pw.TextAlign.center,
+                                            style: pw.TextStyle(font: font)),
+                                        pw.Text(
+                                          person.schoolClass,
+                                          textAlign: pw.TextAlign.center,
+                                          style: pw.TextStyle(font: font)
+                                        ),
+                                        pw.Text(
+                                          weekday,
+                                          textAlign: pw.TextAlign.center,
+                                          style: pw.TextStyle(font: font)
+                                        ),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                        pw.Text(""),
+                                      ])
+                        ])),
+                    ]),
+            );
+        }
+      }
     }
 
     final pdfTrend = pw.Document();
@@ -264,11 +300,12 @@ class PdfExporter {
                             fontSize: 16.0, font: font),
                       ),
                     ]),
-                    for (String agName in agPreferenceCounter.keys)
-                      for(String weekday in agPreferenceCounter[agName]!.keys)
+                    for (int agId in agPreferenceCounter.keys)
+                      for(String weekday in agPreferenceCounter[agId]!.keys)
+                        if(getAgById(agId, ags) != null)
                           pw.TableRow(
                               children: [
-                                pw.Text(agName,
+                                pw.Text(getAgById(agId, ags)!.name,
                                     textAlign: pw.TextAlign.center,
                                     style: pw.TextStyle(font: font)),
                                 pw.Text(
@@ -277,7 +314,7 @@ class PdfExporter {
                                   style: pw.TextStyle(font: font)
                                 ),
                                 pw.Text(
-                                  "${agPreferenceCounter[agName]![weekday]!}",
+                                  "${agPreferenceCounter[agId]![weekday]!}",
                                   textAlign: pw.TextAlign.center,
                                   style: pw.TextStyle(font: font)
                                 ),
