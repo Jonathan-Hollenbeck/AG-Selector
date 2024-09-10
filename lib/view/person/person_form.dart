@@ -61,6 +61,7 @@ class _PersonFormState extends State<PersonForm> {
     } else {
       personAgPreferences =
           await widget.persistenceManager.getPersonAgPreferences(widget.person);
+      setState(() {});
     }
   }
 
