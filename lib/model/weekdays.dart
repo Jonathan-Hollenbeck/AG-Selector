@@ -11,36 +11,34 @@ class Weekdays {
     String weekdaysToShortString = "";
 
     for (String weekday in weekdays) {
-      switch (weekday) {
-        case monday:
-          weekdaysToShortString += "Mo, ";
-          break;
-        case tuesday:
-          weekdaysToShortString += "Di, ";
-          break;
-        case wednesday:
-          weekdaysToShortString += "Mi, ";
-          break;
-        case thursday:
-          weekdaysToShortString += "Do, ";
-          break;
-        case friday:
-          weekdaysToShortString += "Fr, ";
-          break;
-        case saturday:
-          weekdaysToShortString += "Sa, ";
-          break;
-        case sunday:
-          weekdaysToShortString += "So, ";
-          break;
-        default:
-      }
+      weekdaysToShortString += "${weekdayToShortString(weekday)}, ";
     }
     if (weekdaysToShortString.length >= 2) {
       return weekdaysToShortString.substring(
           0, weekdaysToShortString.length - 2);
     }
     return "";
+  }
+
+  static String weekdayToShortString(String weekday){
+    switch (weekday) {
+        case monday:
+          return "Mo";
+        case tuesday:
+          return "Di";
+        case wednesday:
+          return "Mi";
+        case thursday:
+          return "Do";
+        case friday:
+          return "Fr";
+        case saturday:
+          return "Sa";
+        case sunday:
+          return "So";
+        default:
+          return "";
+      }
   }
 
   static List<String> getWeekdaysFromByteCode(int bytecode) {

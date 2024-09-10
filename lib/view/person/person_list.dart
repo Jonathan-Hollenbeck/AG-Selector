@@ -25,6 +25,8 @@ class _PersonListState extends State<PersonList> {
   String filterHouse = "Haus";
   String filterSchoolClass = "Klasse";
 
+  Map<Person, List<PersonAgPreference>> personToPreferenceList = <Person, List<PersonAgPreference>>{};
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +49,18 @@ class _PersonListState extends State<PersonList> {
     for (Person person in persons) {
       filterHouseSet.add(person.house);
       filterSchoolClassSet.add(person.schoolClass);
+    }
+    setState(() {});
+    reloadPersonAgPreferences();
+  }
+
+  void reloadPersonAgPreferences() async {
+    personToPreferenceList.clear();
+    for(Person person in persons){
+      List<PersonAgPreference> personAgPreferences = await widget.persistenceManager.getPersonAgPreferences(person);
+      if(!personToPreferenceList.keys.contains(person)){
+        personToPreferenceList[person] = personAgPreferences;
+      }
     }
     setState(() {});
   }
@@ -97,6 +111,28 @@ class _PersonListState extends State<PersonList> {
                 ags: ags,
               )),
     );
+  }
+
+  String getPreferencesForPerson(Person person){
+    String result = "";
+    Map<String, int> resultMap = <String, int>{};
+    List<PersonAgPreference>? list = personToPreferenceList[person];
+    if(list != null){
+      for(PersonAgPreference personAgPreference in list){
+        String weekday = personAgPreference.weekday;
+        if(!resultMap.keys.contains(weekday)){
+          resultMap[weekday] = 0;
+        }
+        resultMap[weekday] = resultMap[weekday]! + 1;
+      }
+    }
+    for(String weekday in resultMap.keys){
+      result += "${Weekdays.weekdayToShortString(weekday)}: ${resultMap[weekday]}, ";
+    }
+    if(result.isNotEmpty){
+      return result.substring(0, result.length - 2);
+    }
+    return "";
   }
 
   @override
@@ -167,6 +203,12 @@ class _PersonListState extends State<PersonList> {
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
                   const Text(
+                    "Präferenzen",
+                    textAlign: TextAlign.center,
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                  ),
+                  const Text(
                     "Bearbeiten",
                     textAlign: TextAlign.center,
                     style:
@@ -179,6 +221,8 @@ class _PersonListState extends State<PersonList> {
                     Text(person.house, textAlign: TextAlign.center),
                     Text(person.schoolClass, textAlign: TextAlign.center),
                     Text(Weekdays.weekdaysToShortString(person.weekdaysPresent),
+                        textAlign: TextAlign.center),
+                    Text(getPreferencesForPerson(person),
                         textAlign: TextAlign.center),
                     ElevatedButton(
                         onPressed: () {

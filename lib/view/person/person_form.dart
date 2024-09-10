@@ -67,6 +67,7 @@ class _PersonFormState extends State<PersonForm> {
   void setPersonAgPreferences(
       List<PersonAgPreference> personAgPreferencesParam) {
     personAgPreferences = personAgPreferencesParam;
+    setState(() {});
   }
 
   void onWeekdaysSelected(List<String> weekdaysPresent) {
