@@ -2,14 +2,20 @@ import 'dart:io';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 
 class PdfExporter {
+  String combineHouseAndClass(Person person){
+    return "${person.house}${person.schoolClass}";
+  }
+
   Future<String?> generatePdf(
       Map<Person, Map<String, AG>> selection, List<Person> persons) async {
+
+    persons.sort((a, b) => combineHouseAndClass(a).compareTo(combineHouseAndClass(b)));
+    
     Set<String> houses = {};
     for (Person person in persons) {
       houses.add(person.house);
@@ -22,9 +28,7 @@ class PdfExporter {
       }
     }
 
-    persons.sort((a, b) => a.house.compareTo(b.house));
-
-    final font = pw.Font.ttf(await rootBundle.load("fonts/Roboto.ttf"));
+    final font = pw.Font.helvetica();
 
     final pdfHouse = pw.Document();
 
