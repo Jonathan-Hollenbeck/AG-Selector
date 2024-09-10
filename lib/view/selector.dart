@@ -97,7 +97,7 @@ class _SelectorListState extends State<Selector> {
   }
 
   void savePDF() async {
-    final String? success = await pdfExporter.generatePdf(selection, persons);
+    final String? success = await pdfExporter.generatePdf(selection, persons, widget.persistenceManager);
     if (success == null) {
       showDialog(
         context: context,
@@ -246,39 +246,49 @@ class _SelectorListState extends State<Selector> {
                     },
                   ),
                 ]),
-                for (Person person in persons)
-                  if (selection[person] != null &&
-                      (filterHouse == "Haus" || filterHouse == person.house) &&
+                for (int i = 0; i < persons.length; i++)
+                  if (selection[persons[i]] != null &&
+                      (filterHouse == "Haus" || filterHouse == persons[i].house) &&
                       (filterSchoolClass == "Klasse" ||
-                          filterSchoolClass == person.schoolClass))
-                    for (String weekday in person.weekdaysPresent)
-                      if (isInSelection(person, weekday) == true &&
+                          filterSchoolClass == persons[i].schoolClass))
+                    for (String weekday in persons[i].weekdaysPresent)
+                      if (isInSelection(persons[i], weekday) == true &&
                           (filterWeekday == "Wochentag" ||
                               filterWeekday == weekday) &&
                           (filterAG == "AG" ||
-                              filterAG == selection[person]![weekday]!.name))
-                        TableRow(children: [
-                          Text(person.name),
-                          Text(person.house),
-                          Text(person.schoolClass),
-                          Text(weekday),
-                          Text(selection[person]![weekday]!.name),
-                          /**DropdownButton(
-                            value: selection[person]![weekday],
-                            items: ags
-                                .map<DropdownMenuItem<AG>>(
-                                  (AG ag) => DropdownMenuItem(
-                                      value: ag, child: Text(ag.name)),
-                                )
-                                .toList(),
-                            onChanged: (AG? ag) {
-                              setState(() {
-                                if (selection[person] != null) {
-                                  selection[person]![weekday] = ag!;
-                                }
-                              });
-                            },
-                          ),**/
+                              filterAG == selection[persons[i]]![weekday]!.name))
+                        TableRow(
+                          decoration: BoxDecoration(
+                              color:
+                                Color.fromARGB(
+                                  (i % 2) * 255,
+                                  192,
+                                  192,
+                                  192
+                              )
+                            ),
+                          children: [
+                            Text(persons[i].name),
+                            Text(persons[i].house),
+                            Text(persons[i].schoolClass),
+                            Text(weekday),
+                            Text(selection[persons[i]]![weekday]!.name),
+                            /**DropdownButton(
+                              value: selection[persons[i]]![weekday],
+                              items: ags
+                                  .map<DropdownMenuItem<AG>>(
+                                    (AG ag) => DropdownMenuItem(
+                                        value: ag, child: Text(ag.name)),
+                                  )
+                                  .toList(),
+                              onChanged: (AG? ag) {
+                                setState(() {
+                                  if (selection[persons[i]] != null) {
+                                    selection[persons[i]]![weekday] = ag!;
+                                  }
+                                });
+                              },
+                            ),**/
                         ])
               ],
             ),
