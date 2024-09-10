@@ -132,7 +132,6 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     }
 
     reloadSettings();
-    reloadPersonAgPreferences();
     setState(() {});
   }
 
@@ -145,6 +144,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                 .map((int value) => value + 1)
                 .toList())));
     setState(() {});
+    reloadPersonAgPreferences();
   }
 
   void reloadPersonAgPreferences() async {

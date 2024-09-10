@@ -186,6 +186,11 @@ class _PersonFormState extends State<PersonForm> {
     Navigator.pop(context);
   }
 
+  List<PersonAgPreference> sortedAgPreferences(List<PersonAgPreference> personAgPreferences){
+    personAgPreferences.sort((a, b) => a.preferenceNumber.compareTo(b.preferenceNumber));
+    return personAgPreferences;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -242,6 +247,24 @@ class _PersonFormState extends State<PersonForm> {
                   ),
                 ],
               ),
+              for(PersonAgPreference personAgPreference in sortedAgPreferences(personAgPreferences))
+                Table(
+                  border: TableBorder.all(),
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    TableRow(children: [
+                      Text(
+                        personAgPreference.ag.name,
+                        textAlign: TextAlign.center),
+                      Text(
+                        personAgPreference.weekday,
+                        textAlign: TextAlign.center),
+                      Text(
+                        "${personAgPreference.preferenceNumber}",
+                        textAlign: TextAlign.center),
+                    ])
+                  ]
+                ),
               widget.createMode == true
                   ? FloatingActionButton(
                       onPressed: _submitForm,
