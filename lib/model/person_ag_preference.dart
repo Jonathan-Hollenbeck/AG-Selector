@@ -20,4 +20,9 @@ class PersonAgPreference implements PersistenceObject{
     required this.person,
     required this.ag,
   });
+  
+  @override
+  String toString() {
+    return "Id: $id, PreferenceNumber: $preferenceNumber, Person ${person.name}, AG: ${ag.name}, Weekday: $weekday";
+  }
 }

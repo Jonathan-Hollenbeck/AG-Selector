@@ -47,26 +47,21 @@ class _SelectPreferencesState extends State<SelectPreferences> {
   String filterWeekday = "Wochentag";
 
   void setAGPreference(AG ag, String weekday, String preferenceString) {
-    setState(() {
       if (preferenceString != "") {
         //get int from preference String
         int preference = int.parse(preferenceString);
 
-        //reset previouse agNWeekdayToPreference for View
-        PersonAgPreference? personAgPreferenceToReset =
-            getPersonAgPreferenceByWeekdayAndPreferenceNumber(
-                weekday, preference);
-        if (personAgPreferenceToReset != null &&
-            agNWeekdayToPreference[personAgPreferenceToReset.ag.id] != null) {
-          agNWeekdayToPreference[personAgPreferenceToReset.ag.id]![
-              personAgPreferenceToReset.weekday] = "";
-          personAgPreferences.remove(personAgPreferenceToReset);
+        //remove old preference
+        PersonAgPreference? oldPreference = getPersonAgPreferenceByAGWeekdayPreferenceNumber(ag, weekday, preference);
+        if(oldPreference != null){
+          personAgPreferences.remove(oldPreference);
         }
 
+        //add new one
         PersonAgPreference? personAgPreference =
             getPersonAgPreferenceFromAGAndWeekday(ag, weekday);
 
-        if (personAgPreference != null && preferenceString != "") {
+        if (personAgPreference != null) {
           //set preferenceNumber
           personAgPreference.preferenceNumber = preference;
         } else {
@@ -79,19 +74,18 @@ class _SelectPreferencesState extends State<SelectPreferences> {
           personAgPreferences.add(personAgPreference);
         }
       }
-      setPersonPreferenceView(ag, weekday, preferenceString);
-    });
+      else{
+        PersonAgPreference? personAgPreference = getPersonAgPreferenceFromAGAndWeekday(ag, weekday);
+        if(personAgPreference != null){
+          personAgPreferences.remove(personAgPreference);
+        }
+      }
+      resetAgNWeekdayPreferenceView();
+    setState(() {});
   }
 
-  void setPersonPreferenceView(AG ag, String weekday, String preferenceString) {
-    //set new agNWeekdayToPreference for View
-    if (agNWeekdayToPreference[ag.id] != null) {
-      agNWeekdayToPreference[ag.id]![weekday] = preferenceString;
-    }
-  }
-
-  PersonAgPreference? getPersonAgPreferenceByWeekdayAndPreferenceNumber(
-      String weekday, int preference) {
+  PersonAgPreference? getPersonAgPreferenceByAGWeekdayPreferenceNumber(
+      AG ag, String weekday, int preference) {
     for (PersonAgPreference personAgPreference in personAgPreferences) {
       if (personAgPreference.weekday == weekday &&
           personAgPreference.preferenceNumber == preference) {
@@ -104,7 +98,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
   PersonAgPreference? getPersonAgPreferenceFromAGAndWeekday(
       AG ag, String weekday) {
     for (PersonAgPreference personAgPreference in personAgPreferences) {
-      if (personAgPreference.ag == ag &&
+      if (personAgPreference.ag.id == ag.id &&
           personAgPreference.weekday == weekday) {
         return personAgPreference;
       }
@@ -116,17 +110,12 @@ class _SelectPreferencesState extends State<SelectPreferences> {
   void initState() {
     super.initState();
 
-    //create map for view
+    //create filter
     filterWeekdaySet.add("Wochentag");
     for (AG ag in widget.ags) {
       for (String weekday in ag.weekdays) {
         if (widget.weekdaysPresent.contains(weekday)) {
           filterWeekdaySet.add(weekday);
-          if (agNWeekdayToPreference.keys.contains(ag.id)) {
-            agNWeekdayToPreference[ag.id]!.putIfAbsent(weekday, () => "");
-          } else {
-            agNWeekdayToPreference.putIfAbsent(ag.id, () => {weekday: ""});
-          }
         }
       }
     }
@@ -160,18 +149,28 @@ class _SelectPreferencesState extends State<SelectPreferences> {
     for (PersonAgPreference removePersonAgPreference in removeList) {
       personAgPreferences.remove(removePersonAgPreference);
     }
+    resetAgNWeekdayPreferenceView();
+    setState(() {});
+  }
 
-    for (PersonAgPreference personAgPreference in personAgPreferences) {
-      //fill in the view map with the loaded preferences
-      if (agNWeekdayToPreference.keys.contains(personAgPreference.ag.id) &&
-          agNWeekdayToPreference[personAgPreference.ag.id]!
-              .keys
-              .contains(personAgPreference.weekday)) {
-        agNWeekdayToPreference[personAgPreference.ag.id]![personAgPreference
-            .weekday] = personAgPreference.preferenceNumber.toString();
+  void resetAgNWeekdayPreferenceView(){
+    agNWeekdayToPreference.clear();
+    for(AG ag in widget.ags){
+      for(String weekday in ag.weekdays){
+        if(!agNWeekdayToPreference.keys.contains(ag.id)){
+        agNWeekdayToPreference[ag.id] = {};
+        }
+        if(!agNWeekdayToPreference[ag.id]!.keys.contains(weekday)){
+          agNWeekdayToPreference[ag.id]![weekday] = "";
+        }
       }
     }
-    setState(() {});
+    for(PersonAgPreference personAgPreference in personAgPreferences){
+      AG ag = personAgPreference.ag;
+      String weekday = personAgPreference.weekday;
+      int preferenceNumber = personAgPreference.preferenceNumber;
+      agNWeekdayToPreference[ag.id]![weekday] = "$preferenceNumber";
+    }
   }
 
   // Function called when form is submitted
