@@ -3,13 +3,20 @@ import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
 import 'package:ag_selector/util/string_utils.dart';
+import 'package:flutter/material.dart';
 
 class CreateSelection {
+
+  bool allPersonsGotAgs = true;
+
   Future<Map<Person, Map<String, AG>>> createSelection(
       PersistenceManager persistenceManager,
       List<Person> persons,
       List<AG> ags,
-      int numberOfPreferences) async {
+      int numberOfPreferences, BuildContext context) async {
+    
+    allPersonsGotAgs = true;
+
     Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
 
     selection = await _tryAllFirstChoice(persistenceManager, persons, ags);
@@ -17,6 +24,24 @@ class CreateSelection {
     if (selection.isEmpty) {
       selection = await _tryScoring(
           persistenceManager, persons, ags, numberOfPreferences);
+    }
+
+    if(!allPersonsGotAgs){
+      showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('WARNUNG!'),
+          content: const Text('Nicht alle Personen haben immer ein AG bekommen!'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
     }
 
     return selection;
@@ -84,9 +109,6 @@ class CreateSelection {
     //shuffle persons, to give everybody the chance to be the first.
     persons.shuffle();
 
-    //create value for manipulating score by numberOfPreferences
-    int scoreManipulator = numberOfPreferences ~/ 2;
-
     //max person tracker for tracking, if the ag still has slots left
     Map<int, int> maxPersonTracker = getMaxPersonTracker(ags);
 
@@ -116,11 +138,13 @@ class CreateSelection {
           selection =
               putInSelection(selection, person, weekday, AG.createEmptyAG());
           preferenceScoring[person] =
-              preferenceScoring[person]! + (scoreManipulator * 2);
+              preferenceScoring[person]! + numberOfPreferences;
+          allPersonsGotAgs = false;
         } else {
+          int preferenceNumber = getPersonPreferenceForAG(ag, personAgPreferences);
           selection = putInSelection(selection, person, weekday, ag);
           preferenceScoring[person] =
-              preferenceScoring[person]! - scoreManipulator;
+              preferenceScoring[person]! - (numberOfPreferences - preferenceNumber);
           //increment maxPersonTracker for AG
           maxPersonTracker[ag.id] = maxPersonTracker[ag.id]! - 1;
         }
@@ -172,6 +196,17 @@ class CreateSelection {
       }
     }
     return null;
+  }
+
+  //get the preferenceNumber for a ag for a person
+  int getPersonPreferenceForAG(AG ag, List<PersonAgPreference> agPreferences){
+    int preference = -1;
+    for(PersonAgPreference personAgPreference in agPreferences){
+      if(personAgPreference.ag.id == ag.id){
+        return personAgPreference.preferenceNumber;
+      }
+    }
+    return preference;
   }
 
   //get all PersonAGPreferences, that have a specific weekday

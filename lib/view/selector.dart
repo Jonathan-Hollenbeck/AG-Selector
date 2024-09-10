@@ -48,7 +48,7 @@ class _SelectorListState extends State<Selector> {
 
   void createSelectionForPersons() async {
     selection = await createSelection.createSelection(
-        widget.persistenceManager, persons, ags, settings.numberOfPreferences);
+        widget.persistenceManager, persons, ags, settings.numberOfPreferences, context);
     setState(() {
       for (Person person in selection.keys) {
         for (String weekday in selection[person]!.keys) {
@@ -57,6 +57,7 @@ class _SelectorListState extends State<Selector> {
       }
       filterWeekdaySet.add("Wochentag");
     });
+    persons.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   @override
