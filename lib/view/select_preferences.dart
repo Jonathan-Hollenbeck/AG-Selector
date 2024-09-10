@@ -225,17 +225,27 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                   ),
                 ]),
-                for (AG ag in widget.ags)
+                for (int i = 0; i < widget.ags.length; i++)
                   for (String weekday in widget.weekdaysPresent)
-                    if (agNWeekdayToPreference[ag.id] != null &&
-                        agNWeekdayToPreference[ag.id]![weekday] != null &&
+                    if (agNWeekdayToPreference[widget.ags[i].id] != null &&
+                        agNWeekdayToPreference[widget.ags[i].id]![weekday] != null &&
                         (filterWeekday == "Wochentag" ||
                             filterWeekday == weekday))
-                      TableRow(children: [
-                        Text(ag.toShortString()),
+                      TableRow(
+                        decoration: BoxDecoration(
+                            color:
+                              Color.fromARGB(
+                                (i % 2) * 255,
+                                192,
+                                192,
+                                192
+                            )
+                          ),
+                        children: [
+                        Text(widget.ags[i].toShortString()),
                         Text(weekday),
                         DropdownButton(
-                          value: agNWeekdayToPreference[ag.id]![weekday],
+                          value: agNWeekdayToPreference[widget.ags[i].id]![weekday],
                           items: numberOfPreferencesList
                               .map<DropdownMenuItem<String>>(
                                 (String value) => DropdownMenuItem(
@@ -244,7 +254,7 @@ class _SelectPreferencesState extends State<SelectPreferences> {
                               .toList(),
                           onChanged: (String? value) {
                             if (value != null) {
-                              setAGPreference(ag, weekday, value);
+                              setAGPreference(widget.ags[i], weekday, value);
                             }
                           },
                         ),
