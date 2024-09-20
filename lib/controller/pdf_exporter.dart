@@ -13,9 +13,16 @@ class PdfExporter {
 
   int agPdfColorCounter = 0;
 
+  bool checkInsertRowIntoAgPDF(Map<Person, Map<String, AG>> selection, Person person, String weekday, String agName, String weekdayLoop){
+    if(checkIfPersonInAg(selection, person, weekday, agName) == true && weekday == weekdayLoop){
+      agPdfColorCounter++;
+      return true;
+    }
+    return false;
+  }
+
   bool checkIfPersonInAg(Map<Person, Map<String, AG>> selection, Person person, String weekday, String agName){
     if(selection[person]![weekday]!.name == agName){
-      agPdfColorCounter++;
       return true;
     }
     return false;
@@ -174,6 +181,7 @@ class PdfExporter {
       AG? currentAG = getAgById(agId, ags);
       if(currentAG != null){
         for(String weekdayLoop in currentAG.weekdays){
+          agPdfColorCounter = 0;
           pdfAg.addPage(
             pw.MultiPage(
               orientation: pw.PageOrientation.landscape,
@@ -192,6 +200,7 @@ class PdfExporter {
                                 pw.TableCellVerticalAlignment.middle,
                             children: [
                           pw.TableRow(children: [
+                            pw.Text("" , textAlign: pw.TextAlign.center),
                             pw.Text(
                               "Person",
                               textAlign: pw.TextAlign.center,
@@ -201,13 +210,6 @@ class PdfExporter {
                             ),
                             pw.Text(
                               "Klasse",
-                              textAlign: pw.TextAlign.center,
-                              style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 16.0, font: font),
-                            ),
-                            pw.Text(
-                              "Wochentag",
                               textAlign: pw.TextAlign.center,
                               style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
@@ -226,7 +228,7 @@ class PdfExporter {
                           ]),
                           for (Person person in selectionKeysSorted)
                             for(String weekday in selection[person]!.keys)
-                              if(checkIfPersonInAg(selection, person, weekday, currentAG.name) && weekdayLoop == weekday)
+                              if(checkInsertRowIntoAgPDF(selection, person, weekday, currentAG.name, weekdayLoop))
                                   pw.TableRow(
                                       decoration: pw.BoxDecoration(
                                           color: PdfColor(
@@ -234,16 +236,12 @@ class PdfExporter {
                                               1.0 - (((agPdfColorCounter % 2) / 10) * 2),
                                               1.0 - (((agPdfColorCounter % 2) / 10) * 2))),
                                       children: [
+                                        pw.Text("$agPdfColorCounter" , textAlign: pw.TextAlign.center),
                                         pw.Text(person.name,
                                             textAlign: pw.TextAlign.center,
                                             style: pw.TextStyle(font: font)),
                                         pw.Text(
                                           person.schoolClass,
-                                          textAlign: pw.TextAlign.center,
-                                          style: pw.TextStyle(font: font)
-                                        ),
-                                        pw.Text(
-                                          weekday,
                                           textAlign: pw.TextAlign.center,
                                           style: pw.TextStyle(font: font)
                                         ),
