@@ -76,13 +76,22 @@ class PdfExporter {
       houses.add(person.house);
     }
 
+    Map<int, Map<String, int>> agPersonCounter = {};
     Set<int> agIds = {};
     for (Person person in selection.keys) {
       for(String weekday in selection[person]!.keys){
-        agIds.add(selection[person]![weekday]!.id);
+        int agId = selection[person]![weekday]!.id;
+        if(!agPersonCounter.keys.contains(agId)){
+          agPersonCounter[agId] = {};
+        }
+        if(!agPersonCounter[agId]!.keys.contains(weekday)){
+          agPersonCounter[agId]![weekday] = 0;
+        }
+        agPersonCounter[agId]![weekday] = agPersonCounter[agId]![weekday]! + 1;
+        agIds.add(agId);
       }
     }
-
+    print(agPreferenceCounter.keys.length);
     final font = pw.Font.helvetica();
 
     final pdfHouse = pw.Document();
@@ -188,7 +197,7 @@ class PdfExporter {
                 pageFormat: PdfPageFormat.a4,
                 build: (context) => [
                     pw.Text(
-                      "${currentAG.name} $weekdayLoop (${StringUtils.timeToString(currentAG.startTime.hour, currentAG.startTime.minute)} - ${StringUtils.timeToString(currentAG.endTime.hour, currentAG.endTime.minute)})",
+                      "${currentAG.name} $weekdayLoop (${StringUtils.timeToString(currentAG.startTime.hour, currentAG.startTime.minute)} - ${StringUtils.timeToString(currentAG.endTime.hour, currentAG.endTime.minute)}) ${agPersonCounter[agId]![weekdayLoop]} Personen",
                       textAlign: pw.TextAlign.center,
                       style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold, fontSize: 20.0, font: font),
@@ -291,7 +300,14 @@ class PdfExporter {
                             fontSize: 16.0, font: font),
                       ),
                       pw.Text(
-                        "Anzahl Präferenzen",
+                        "Anzahl erste Präferenzen",
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 16.0, font: font),
+                      ),
+                      pw.Text(
+                        "Vergebene Plätze",
                         textAlign: pw.TextAlign.center,
                         style: pw.TextStyle(
                             fontWeight: pw.FontWeight.bold,
@@ -313,6 +329,11 @@ class PdfExporter {
                                 ),
                                 pw.Text(
                                   "${agPreferenceCounter[agId]![weekday]!}",
+                                  textAlign: pw.TextAlign.center,
+                                  style: pw.TextStyle(font: font)
+                                ),
+                                pw.Text(
+                                  "${agPersonCounter[agId]![weekday]}/${getAgById(agId, ags)!.maxPersons}",
                                   textAlign: pw.TextAlign.center,
                                   style: pw.TextStyle(font: font)
                                 ),
