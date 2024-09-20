@@ -29,7 +29,7 @@ class PdfExporter {
   }
 
   String combineHouseAndClass(Person person){
-    return "${person.schoolClass}${person.house}";
+    return "${person.schoolClass}${person.house}${person.name}";
   }
 
   AG? getAgById(int id, List<AG> ags){
@@ -51,7 +51,7 @@ class PdfExporter {
     List<Person> selectionKeysSorted = selection.keys.toList();
     selectionKeysSorted.sort((a, b) => combineHouseAndClass(a).compareTo(combineHouseAndClass(b)));
 
-    Map<int, Map<String, int>> agPreferenceCounter = {};
+    Map<String, Map<int, int>> agPreferenceCounter = {};
 
     for(Person person in selection.keys){
       List<PersonAgPreference> personAgPreferences = await persistenceManager.getPersonAgPreferences(person);
@@ -60,13 +60,13 @@ class PdfExporter {
         String weekday = personAgPreference.weekday;
         int preference = personAgPreference.preferenceNumber;
         if(preference == 1){
-          if(!agPreferenceCounter.keys.contains(agId)){
-            agPreferenceCounter[agId] = {};
+          if(!agPreferenceCounter.keys.contains(weekday)){
+            agPreferenceCounter[weekday] = {};
           }
-          if(!agPreferenceCounter[agId]!.keys.contains(weekday)){
-            agPreferenceCounter[agId]![weekday] = 0;
+          if(!agPreferenceCounter[weekday]!.keys.contains(agId)){
+            agPreferenceCounter[weekday]![agId] = 0;
           }
-          agPreferenceCounter[agId]![weekday] = agPreferenceCounter[agId]![weekday]! + 1;
+          agPreferenceCounter[weekday]![agId] = agPreferenceCounter[weekday]![agId]! + 1;
         }
       }
     }
@@ -274,61 +274,57 @@ class PdfExporter {
 
     final pdfTrend = pw.Document();
 
-    pdfTrend.addPage(
-      pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
-          build: (context) => [
-              pw.Center(
-                  child: pw.Table(
-                      border: pw.TableBorder.all(),
-                      defaultVerticalAlignment:
-                          pw.TableCellVerticalAlignment.middle,
-                      children: [
-                    pw.TableRow(children: [
-                      pw.Text(
-                        "AG",
-                        textAlign: pw.TextAlign.center,
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 16.0, font: font),
-                      ),
-                      pw.Text(
-                        "Wochentag",
-                        textAlign: pw.TextAlign.center,
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 16.0, font: font),
-                      ),
-                      pw.Text(
-                        "Anzahl erste Präferenzen",
-                        textAlign: pw.TextAlign.center,
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 16.0, font: font),
-                      ),
-                      pw.Text(
-                        "Vergebene Plätze",
-                        textAlign: pw.TextAlign.center,
-                        style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 16.0, font: font),
-                      ),
-                    ]),
-                    for (int agId in agPreferenceCounter.keys)
-                      for(String weekday in agPreferenceCounter[agId]!.keys)
+    for(String weekday in agPreferenceCounter.keys){
+      pdfTrend.addPage(
+        pw.MultiPage(
+            pageFormat: PdfPageFormat.a4,
+            build: (context) => [
+                pw.Text(
+                  weekday,
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 20.0, font: font),
+                ),
+                pw.Center(
+                    child: pw.Table(
+                        border: pw.TableBorder.all(),
+                        defaultVerticalAlignment:
+                            pw.TableCellVerticalAlignment.middle,
+                        children: [
+                      pw.TableRow(children: [
+                        pw.Text(
+                          "AG",
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 16.0, font: font),
+                        ),
+                        pw.Text(
+                          "Anzahl erste Präferenzen",
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 16.0, font: font),
+                        ),
+                        pw.Text(
+                          "Vergebene Plätze",
+                          textAlign: pw.TextAlign.center,
+                          style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 16.0, font: font),
+                        ),
+                      ]),
+                      for (int agId in agPreferenceCounter[weekday]!.keys)
                         if(getAgById(agId, ags) != null)
                           pw.TableRow(
                               children: [
-                                pw.Text(getAgById(agId, ags)!.name,
-                                    textAlign: pw.TextAlign.center,
-                                    style: pw.TextStyle(font: font)),
                                 pw.Text(
-                                  weekday,
+                                  getAgById(agId, ags)!.name,
                                   textAlign: pw.TextAlign.center,
                                   style: pw.TextStyle(font: font)
                                 ),
                                 pw.Text(
-                                  "${agPreferenceCounter[agId]![weekday]!}",
+                                  "${agPreferenceCounter[weekday]![agId]!}",
                                   textAlign: pw.TextAlign.center,
                                   style: pw.TextStyle(font: font)
                                 ),
@@ -338,10 +334,10 @@ class PdfExporter {
                                   style: pw.TextStyle(font: font)
                                 ),
                               ])
-                  ])),
-              ]),
-        );
-
+                    ])),
+                ]),
+          );
+    }
 
     try {
       PermissionStatus storageStatus = PermissionStatus.granted;
