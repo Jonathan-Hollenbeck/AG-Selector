@@ -91,7 +91,7 @@ class PdfExporter {
         agIds.add(agId);
       }
     }
-    print(agPreferenceCounter.keys.length);
+
     final font = pw.Font.helvetica();
 
     final pdfHouse = pw.Document();

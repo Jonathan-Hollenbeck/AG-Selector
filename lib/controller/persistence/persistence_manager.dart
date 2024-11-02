@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:ag_selector/controller/persistence/persistence_ag.dart';
 import 'package:ag_selector/controller/persistence/persistence_person.dart';
 import 'package:ag_selector/controller/persistence/persistence_person_ag_preferences.dart';
+import 'package:ag_selector/controller/persistence/persistence_person_apart.dart';
+import 'package:ag_selector/controller/persistence/persistence_selection.dart';
 import 'package:ag_selector/controller/persistence/persistence_settings.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/persistence_object.dart';
@@ -119,6 +121,12 @@ class PersistenceManager {
     return numberOfRowsAffected;
   }
 
+  ///Persons Apart
+
+  ///Selection
+
+  
+
   ///Settings
 
   Future<Settings> loadSettings() async {
@@ -178,6 +186,28 @@ class PersistenceManager {
           ${PersistencePersonAgPreferences.preferenceNumberDBField} INTEGER NOT NULL,
           FOREIGN KEY (${PersistencePersonAgPreferences.agIdDBField}) REFERENCES ${PersistenceAg.tableName}(${PersistenceObject.idDBField}),
           FOREIGN KEY (${PersistencePersonAgPreferences.personIdDBField}) REFERENCES ${PersistencePerson.tableName}(${PersistenceObject.idDBField})
+        )
+      ''');
+
+      //create Person Apart Table
+      await database!.execute('''
+        CREATE TABLE IF NOT EXISTS ${PersistencePersonApart.tableName} (
+          ${PersistencePersonApart.personAIdDBField} INTEGER NOT NULL,
+          ${PersistencePersonApart.personBIdDBField} INTEGER NOT NULL,
+          FOREIGN KEY (${PersistencePersonApart.personAIdDBField}) REFERENCES ${PersistencePerson.tableName}(${PersistenceObject.idDBField}),
+          FOREIGN KEY (${PersistencePersonApart.personBIdDBField}) REFERENCES ${PersistencePerson.tableName}(${PersistenceObject.idDBField})
+        )
+      ''');
+
+      //create Selection Table
+      await database!.execute('''
+        CREATE TABLE IF NOT EXISTS ${PersistenceSelection.tableName} (
+          ${PersistenceObject.idDBField} INTEGER PRIMARY KEY AUTOINCREMENT,
+          ${PersistenceSelection.personIdDBField} INTEGER NOT NULL,
+          ${PersistenceSelection.agIdDBField} INTEGER NOT NULL,
+          ${PersistenceSelection.weekdayDBField} TEXT NOT NULL,
+          FOREIGN KEY (${PersistenceSelection.personIdDBField}) REFERENCES ${PersistencePerson.tableName}(${PersistenceObject.idDBField}),
+          FOREIGN KEY (${PersistenceSelection.agIdDBField}) REFERENCES ${PersistenceAg.tableName}(${PersistenceObject.idDBField})
         )
       ''');
     }
