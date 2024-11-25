@@ -275,7 +275,7 @@ class _PersonFormState extends State<PersonForm> {
                       },
                       child: const Text(
                         "Personen ausschließen",
-                        style: const TextStyle(fontSize: 16.0),
+                        style: TextStyle(fontSize: 16.0),
                       ),
                     ),
                   ),

@@ -138,7 +138,7 @@ class PersistenceManager {
 
   ///Persons Apart
 
-  Future<Map<Person, Set<Person>>> loadPersonsApart(){
+  Future<Map<Person, List<Person>>> loadPersonsApart(){
     return persistencePersonApart.load(database, this);
   }
 

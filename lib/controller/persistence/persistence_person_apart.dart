@@ -9,8 +9,8 @@ class PersistencePersonApart {
   static const String personAIdDBField = "personAId";
   static const String personBIdDBField = "personBId";
 
-  Future<Map<Person, Set<Person>>> load(Database? database, PersistenceManager persistenceManager) async {
-    Map<Person, Set<Person>> personApartMap = {};
+  Future<Map<Person, List<Person>>> load(Database? database, PersistenceManager persistenceManager) async {
+    Map<Person, List<Person>> personApartMap = {};
     if (database != null && database.isOpen) {
       final List<Map<String, Object?>> objectMap =
           await database.query(tableName);
@@ -19,12 +19,12 @@ class PersistencePersonApart {
         if(newEntry != null){
           //add for person A
           if(!personApartMap.containsKey(newEntry[0])){
-            personApartMap[newEntry[0]] =  {};
+            personApartMap[newEntry[0]] = [];
           }
           personApartMap[newEntry[0]]!.add(newEntry[1]);
           //add for person B
           if(!personApartMap.containsKey(newEntry[1])){
-            personApartMap[newEntry[1]] =  {};
+            personApartMap[newEntry[1]] = [];
           }
           personApartMap[newEntry[1]]!.add(newEntry[0]);
         }
