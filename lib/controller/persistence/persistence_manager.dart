@@ -138,7 +138,26 @@ class PersistenceManager {
 
   ///Persons Apart
 
+  Future<Map<Person, Set<Person>>> loadPersonsApart(){
+    return persistencePersonApart.load(database, this);
+  }
 
+  Future<List<Person>> loadPersonApartForPerson(Person person){
+    return persistencePersonApart.loadForPerson(database, person, this);
+  }
+
+  void insertAllPersonsApart(Person person, List<Person> persons){
+    persistencePersonApart.insertAll(database, person, persons);
+  }
+
+  void deletePersonApart(Person person){
+    persistencePersonApart.delete(database, person);
+  }
+
+  void updatePersonApart(Person person, List<Person> persons){
+    deletePersonApart(person);
+    insertAllPersonsApart(person, persons);
+  }
 
   ///Selection
 

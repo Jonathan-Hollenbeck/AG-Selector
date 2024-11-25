@@ -3,13 +3,14 @@ import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
 import 'package:ag_selector/util/string_utils.dart';
+import 'package:ag_selector/view/person/select_person_apart.dart';
 import 'package:ag_selector/view/select_preferences.dart';
 import 'package:ag_selector/view/select_weekdays.dart';
 import 'package:flutter/material.dart';
 
 class PersonForm extends StatefulWidget {
-  final Function(Person, List<PersonAgPreference>) onPersonCreated;
-  final Function(Person, List<PersonAgPreference>) onPersonEdited;
+  final Function(Person, List<PersonAgPreference>, List<Person>) onPersonCreated;
+  final Function(Person, List<PersonAgPreference>, List<Person>) onPersonEdited;
   final Function(Person) onPersonDeleted;
 
   final PersistenceManager persistenceManager;
@@ -17,6 +18,8 @@ class PersonForm extends StatefulWidget {
   final Person person;
 
   final bool createMode;
+
+  final List<Person> persons;
 
   final List<AG> ags;
 
@@ -29,6 +32,7 @@ class PersonForm extends StatefulWidget {
     required this.createMode,
     required this.ags,
     required this.persistenceManager,
+    required this.persons,
   });
 
   @override
@@ -42,6 +46,7 @@ class _PersonFormState extends State<PersonForm> {
 
   List<String> weekdaysPresent = [];
   List<PersonAgPreference> personAgPreferences = [];
+  List<Person> personsApart = [];
 
   @override
   void initState() {
@@ -53,6 +58,7 @@ class _PersonFormState extends State<PersonForm> {
     weekdaysPresent = widget.person.weekdaysPresent;
 
     reloadPersonAgPreferences();
+    reloadPersonsApart();
   }
 
   void reloadPersonAgPreferences() async {
@@ -61,6 +67,15 @@ class _PersonFormState extends State<PersonForm> {
     } else {
       personAgPreferences =
           await widget.persistenceManager.getPersonAgPreferences(widget.person);
+      setState(() {});
+    }
+  }
+
+  void reloadPersonsApart() async {
+    if (widget.person.id == -1) {
+      personsApart = [];
+    } else {
+      personsApart = await widget.persistenceManager.loadPersonApartForPerson(widget.person);
       setState(() {});
     }
   }
@@ -77,6 +92,12 @@ class _PersonFormState extends State<PersonForm> {
     });
   }
 
+  void onPersonApartSelected(List<Person> personsApart) {
+    setState(() {
+      this.personsApart = personsApart;
+    });
+  }
+
   void selectWeekdays() {
     Navigator.push(
       context,
@@ -84,6 +105,20 @@ class _PersonFormState extends State<PersonForm> {
           builder: (context) => SelectWeekdaysForm(
                 onWeekdaysSelected: onWeekdaysSelected,
                 weekdays: weekdaysPresent,
+              )),
+    );
+  }
+
+  void selectPersonsApart() {
+    List<Person> personListWithoutMyself = [...widget.persons];
+    personListWithoutMyself.remove(widget.person);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => SelectPersonApartForm(
+                persons: personListWithoutMyself,
+                personsApart: personsApart,
+                onPersonsApartSelected: onPersonApartSelected,
               )),
     );
   }
@@ -149,13 +184,14 @@ class _PersonFormState extends State<PersonForm> {
         weekdaysPresent: weekdaysPresent);
 
     if (widget.createMode == true) {
-      widget.onPersonCreated(newPerson, personAgPreferences);
+      widget.onPersonCreated(newPerson, personAgPreferences, personsApart);
       setState(() {
         _nameController.text = "";
         personAgPreferences = [];
+        personsApart = [];
       });
     } else {
-      widget.onPersonEdited(newPerson, personAgPreferences);
+      widget.onPersonEdited(newPerson, personAgPreferences, personsApart);
       Navigator.pop(context);
     }
   }
@@ -228,6 +264,17 @@ class _PersonFormState extends State<PersonForm> {
                       },
                       child: Text(
                         "Wochentage anwesend: ${StringUtils.stringListToString(weekdaysPresent)}",
+                        style: const TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        selectPersonsApart();
+                      },
+                      child: const Text(
+                        "Personen ausschließen",
                         style: const TextStyle(fontSize: 16.0),
                       ),
                     ),

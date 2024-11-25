@@ -66,7 +66,7 @@ class _PersonListState extends State<PersonList> {
   }
 
   void onPersonCreated(
-      Person person, List<PersonAgPreference> personAgPreferences) async {
+      Person person, List<PersonAgPreference> personAgPreferences, List<Person> personsApart) async {
     int id = await widget.persistenceManager.insertPerson(person);
     person.id = id;
 
@@ -76,11 +76,13 @@ class _PersonListState extends State<PersonList> {
       widget.persistenceManager.insertPersonAgPreference(personAgPreference);
     }
 
+    widget.persistenceManager.updatePersonApart(person, personsApart);
+
     reloadPersons();
   }
 
   void onPersonEdited(
-      Person person, List<PersonAgPreference> personAgPreferences) async {
+      Person person, List<PersonAgPreference> personAgPreferences, List<Person> personsApart) async {
     widget.persistenceManager.updatePerson(person);
 
     widget.persistenceManager.deletePersonAgPreferencesForPerson(person);
@@ -88,6 +90,8 @@ class _PersonListState extends State<PersonList> {
       personAgPreference.person = person;
       widget.persistenceManager.insertPersonAgPreference(personAgPreference);
     }
+
+    widget.persistenceManager.updatePersonApart(person, personsApart);
 
     reloadPersons();
   }
@@ -137,6 +141,7 @@ class _PersonListState extends State<PersonList> {
                 person: person,
                 createMode: createMode,
                 ags: ags,
+                persons: persons,
               )),
     );
   }
