@@ -1,3 +1,5 @@
+import 'package:ag_selector/model/person.dart';
+
 class StringUtils {
   static String stringListToString(List<String> list) {
     String result = "";
@@ -58,5 +60,8 @@ class StringUtils {
       }
     }
     return intersection;
+  }
+  static String combineHouseAndClass(Person person){
+    return "${person.schoolClass}${person.house}${person.name}";
   }
 }

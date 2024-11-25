@@ -3,7 +3,9 @@ import 'package:ag_selector/controller/pdf_exporter.dart';
 import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
+import 'package:ag_selector/model/selection_object.dart';
 import 'package:ag_selector/model/settings.dart';
+import 'package:ag_selector/util/string_utils.dart';
 import 'package:flutter/material.dart';
 
 class Selector extends StatefulWidget {
@@ -16,7 +18,7 @@ class Selector extends StatefulWidget {
 }
 
 class _SelectorListState extends State<Selector> {
-  Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
+  List<SelectionObject> selection = [];
 
   CreateSelection createSelection = CreateSelection();
 
@@ -37,9 +39,18 @@ class _SelectorListState extends State<Selector> {
   String filterWeekday = "Wochentag";
   String filterAG = "AG";
 
-  bool isInSelection(Person person, String weekday) {
-    if (selection.keys.contains(person)) {
-      if (selection[person]!.keys.contains(weekday)) {
+  bool isPersonAndWeekdayInSelection(Person person, String weekday) {
+    for(SelectionObject selectionObject in selection){
+      if(selectionObject.person.id == person.id && selectionObject.weekday == weekday){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool isPersonInSelection(Person person) {
+    for(SelectionObject selectionObject in selection){
+      if(selectionObject.person.id == person.id){
         return true;
       }
     }
@@ -49,11 +60,10 @@ class _SelectorListState extends State<Selector> {
   void createSelectionForPersons() async {
     selection = await createSelection.createSelection(
         widget.persistenceManager, persons, ags, settings.numberOfPreferences, context);
+    selection.sort((a, b) => StringUtils.combineHouseAndClass(a.person).compareTo(StringUtils.combineHouseAndClass(b.person)));
     setState(() {
-      for (Person person in selection.keys) {
-        for (String weekday in selection[person]!.keys) {
-          filterWeekdaySet.add(weekday);
-        }
+      for(SelectionObject selectionObject in selection){
+        filterWeekdaySet.add(selectionObject.weekday);
       }
       filterWeekdaySet.add("Wochentag");
     });
@@ -247,17 +257,15 @@ class _SelectorListState extends State<Selector> {
                     },
                   ),
                 ]),
-                for (int i = 0; i < persons.length; i++)
-                  if (selection[persons[i]] != null &&
-                      (filterHouse == "Haus" || filterHouse == persons[i].house) &&
+                for (int i = 0; i < selection.length; i++)
+                  if ((filterHouse == "Haus" || filterHouse == selection[i].person.house) &&
                       (filterSchoolClass == "Klasse" ||
-                          filterSchoolClass == persons[i].schoolClass))
-                    for (String weekday in persons[i].weekdaysPresent)
-                      if (isInSelection(persons[i], weekday) == true &&
+                          filterSchoolClass == selection[i].person.schoolClass))
+                      if (isPersonAndWeekdayInSelection(selection[i].person, selection[i].weekday) == true &&
                           (filterWeekday == "Wochentag" ||
-                              filterWeekday == weekday) &&
+                              filterWeekday == selection[i].weekday) &&
                           (filterAG == "AG" ||
-                              filterAG == selection[persons[i]]![weekday]!.name))
+                              filterAG == selection[i].ag.name))
                         TableRow(
                           decoration: BoxDecoration(
                               color:
@@ -269,27 +277,11 @@ class _SelectorListState extends State<Selector> {
                               )
                             ),
                           children: [
-                            Text(persons[i].name),
-                            Text(persons[i].house),
-                            Text(persons[i].schoolClass),
-                            Text(weekday),
-                            Text(selection[persons[i]]![weekday]!.name),
-                            /**DropdownButton(
-                              value: selection[persons[i]]![weekday],
-                              items: ags
-                                  .map<DropdownMenuItem<AG>>(
-                                    (AG ag) => DropdownMenuItem(
-                                        value: ag, child: Text(ag.name)),
-                                  )
-                                  .toList(),
-                              onChanged: (AG? ag) {
-                                setState(() {
-                                  if (selection[persons[i]] != null) {
-                                    selection[persons[i]]![weekday] = ag!;
-                                  }
-                                });
-                              },
-                            ),**/
+                            Text(selection[i].person.name),
+                            Text(selection[i].person.house),
+                            Text(selection[i].person.schoolClass),
+                            Text(selection[i].weekday),
+                            Text(selection[i].ag.name),
                         ])
               ],
             ),

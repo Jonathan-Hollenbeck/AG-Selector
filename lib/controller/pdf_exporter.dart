@@ -3,6 +3,7 @@ import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
+import 'package:ag_selector/model/selection_object.dart';
 import 'package:ag_selector/util/string_utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pdf/pdf.dart';
@@ -13,25 +14,6 @@ class PdfExporter {
 
   int agPdfColorCounter = 0;
 
-  bool checkInsertRowIntoAgPDF(Map<Person, Map<String, AG>> selection, Person person, String weekday, String agName, String weekdayLoop){
-    if(checkIfPersonInAg(selection, person, weekday, agName) == true && weekday == weekdayLoop){
-      agPdfColorCounter++;
-      return true;
-    }
-    return false;
-  }
-
-  bool checkIfPersonInAg(Map<Person, Map<String, AG>> selection, Person person, String weekday, String agName){
-    if(selection[person]![weekday]!.name == agName){
-      return true;
-    }
-    return false;
-  }
-
-  String combineHouseAndClass(Person person){
-    return "${person.schoolClass}${person.house}${person.name}";
-  }
-
   AG? getAgById(int id, List<AG> ags){
     for(AG ag in ags){
       if(ag.id == id){
@@ -41,19 +23,31 @@ class PdfExporter {
     return null;
   }
 
+  List<SelectionObject> getAllSelectionObjectsForPerson(Person person, List<SelectionObject> selection){
+    return selection.where((so) => so.person.id == person.id).toList();
+  }
+
+  List<Person> getAllPersonsInSelection(List<SelectionObject> selection){
+    List<Person> persons = [];
+    for(SelectionObject selectionObject in selection){
+      persons.add(selectionObject.person);
+    }
+    return persons;
+  }
+
   Future<String?> generatePdf(
-      Map<Person, Map<String, AG>> selection, List<Person> persons, List<AG> ags, PersistenceManager persistenceManager) async {
+      List<SelectionObject> selection, List<Person> persons, List<AG> ags, PersistenceManager persistenceManager) async {
+
+    List<Person> selectionPersons = getAllPersonsInSelection(selection);
+    selectionPersons.sort((a, b) => StringUtils.combineHouseAndClass(a).compareTo(StringUtils.combineHouseAndClass(b)));
 
     agPdfColorCounter = 0;
 
-    persons.sort((a, b) => combineHouseAndClass(a).compareTo(combineHouseAndClass(b)));
-
-    List<Person> selectionKeysSorted = selection.keys.toList();
-    selectionKeysSorted.sort((a, b) => combineHouseAndClass(a).compareTo(combineHouseAndClass(b)));
+    persons.sort((a, b) => StringUtils.combineHouseAndClass(a).compareTo(StringUtils.combineHouseAndClass(b)));
 
     Map<String, Map<int, int>> agPreferenceCounter = {};
 
-    for(Person person in selection.keys){
+    for(Person person in selectionPersons){
       List<PersonAgPreference> personAgPreferences = await persistenceManager.getPersonAgPreferences(person);
       for(PersonAgPreference personAgPreference in personAgPreferences){
         int agId = personAgPreference.ag.id;
@@ -78,18 +72,17 @@ class PdfExporter {
 
     Map<int, Map<String, int>> agPersonCounter = {};
     Set<int> agIds = {};
-    for (Person person in selection.keys) {
-      for(String weekday in selection[person]!.keys){
-        int agId = selection[person]![weekday]!.id;
-        if(!agPersonCounter.keys.contains(agId)){
-          agPersonCounter[agId] = {};
-        }
-        if(!agPersonCounter[agId]!.keys.contains(weekday)){
-          agPersonCounter[agId]![weekday] = 0;
-        }
-        agPersonCounter[agId]![weekday] = agPersonCounter[agId]![weekday]! + 1;
-        agIds.add(agId);
+    for (SelectionObject selectionObject in selection) {
+      int agId = selectionObject.ag.id;
+      String weekday = selectionObject.weekday;
+      if(!agPersonCounter.keys.contains(agId)){
+        agPersonCounter[agId] = {};
       }
+      if(!agPersonCounter[agId]!.keys.contains(weekday)){
+        agPersonCounter[agId]![weekday] = 0;
+      }
+      agPersonCounter[agId]![weekday] = agPersonCounter[agId]![weekday]! + 1;
+      agIds.add(agId);
     }
 
     final font = pw.Font.helvetica();
@@ -144,41 +137,34 @@ class PdfExporter {
                         ),
                       ]),
                       for (int i = 0; i < persons.length; i++)
-                        if (persons[i].house == house &&
-                            selection[persons[i]] != null)
-                          for (String weekday
-                              in persons[i].weekdaysPresent)
-                            if (selection[persons[i]]!
-                                    .keys
-                                    .contains(weekday) ==
-                                true)
-                              pw.TableRow(
-                                  decoration: pw.BoxDecoration(
-                                      color: PdfColor(
-                                          1.0 - (((i % 2) / 10) * 2),
-                                          1.0 - (((i % 2) / 10) * 2),
-                                          1.0 - (((i % 2) / 10) * 2))),
-                                  children: [
-                                    pw.Text(persons[i].name,
-                                        textAlign: pw.TextAlign.center,
-                                        style: pw.TextStyle(font: font)),
-                                    pw.Text(
-                                      persons[i].schoolClass,
+                        if (persons[i].house == house)
+                          for(SelectionObject selectionObject in getAllSelectionObjectsForPerson(persons[i], selection))
+                            pw.TableRow(
+                                decoration: pw.BoxDecoration(
+                                    color: PdfColor(
+                                        1.0 - (((i % 2) / 10) * 2),
+                                        1.0 - (((i % 2) / 10) * 2),
+                                        1.0 - (((i % 2) / 10) * 2))),
+                                children: [
+                                  pw.Text(persons[i].name,
                                       textAlign: pw.TextAlign.center,
-                                      style: pw.TextStyle(font: font)
-                                    ),
-                                    pw.Text(
-                                      weekday,
-                                      textAlign: pw.TextAlign.center,
-                                      style: pw.TextStyle(font: font)
-                                    ),
-                                    pw.Text(
-                                      selection[persons[i]]![weekday]!
-                                          .name,
-                                      textAlign: pw.TextAlign.center,
-                                      style: pw.TextStyle(font: font)
-                                    ),
-                                  ])
+                                      style: pw.TextStyle(font: font)),
+                                  pw.Text(
+                                    persons[i].schoolClass,
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(font: font)
+                                  ),
+                                  pw.Text(
+                                    selectionObject.weekday,
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(font: font)
+                                  ),
+                                  pw.Text(
+                                    selectionObject.ag.name,
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(font: font)
+                                  ),
+                                ])
                     ])),
                 ]),
           );
@@ -235,36 +221,35 @@ class PdfExporter {
                             pw.Text("______" , textAlign: pw.TextAlign.center),
                             pw.Text("______" , textAlign: pw.TextAlign.center),
                           ]),
-                          for (Person person in selectionKeysSorted)
-                            for(String weekday in selection[person]!.keys)
-                              if(checkInsertRowIntoAgPDF(selection, person, weekday, currentAG.name, weekdayLoop))
-                                  pw.TableRow(
-                                      decoration: pw.BoxDecoration(
-                                          color: PdfColor(
-                                              1.0 - (((agPdfColorCounter % 2) / 10) * 2),
-                                              1.0 - (((agPdfColorCounter % 2) / 10) * 2),
-                                              1.0 - (((agPdfColorCounter % 2) / 10) * 2))),
-                                      children: [
-                                        pw.Text("$agPdfColorCounter" , textAlign: pw.TextAlign.center),
-                                        pw.Text(person.name,
-                                            textAlign: pw.TextAlign.center,
-                                            style: pw.TextStyle(font: font)),
-                                        pw.Text(
-                                          person.schoolClass,
-                                          textAlign: pw.TextAlign.center,
-                                          style: pw.TextStyle(font: font)
-                                        ),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                        pw.Text(""),
-                                      ])
+                          for(SelectionObject selectionObject in selection)
+                            if(selectionObject.ag.id == currentAG.id && selectionObject.weekday == weekdayLoop)
+                              pw.TableRow(
+                                decoration: pw.BoxDecoration(
+                                  color: PdfColor(
+                                    1.0 - (((agPdfColorCounter % 2) / 10) * 2),
+                                    1.0 - (((agPdfColorCounter % 2) / 10) * 2),
+                                    1.0 - (((agPdfColorCounter++ % 2) / 10) * 2))),
+                                children: [
+                                  pw.Text("$agPdfColorCounter" , textAlign: pw.TextAlign.center),
+                                  pw.Text(selectionObject.person.name,
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(font: font)),
+                                  pw.Text(
+                                    selectionObject.person.schoolClass,
+                                    textAlign: pw.TextAlign.center,
+                                    style: pw.TextStyle(font: font)
+                                  ),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                  pw.Text(""),
+                                ])
                         ])),
                     ]),
             );

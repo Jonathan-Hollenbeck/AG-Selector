@@ -39,6 +39,11 @@ class PersistenceManager {
 
   ///AG
 
+  Future<AG?> loadAgById(int agId) async {
+    AG? ag = await persistenceAg.getById(database, agId);
+    return ag;
+  }
+
   Future<List<AG>> loadAgs() async {
     List<AG> ags = await persistenceAg.load(database);
     ags.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -61,6 +66,11 @@ class PersistenceManager {
   }
 
   ///Person
+
+  Future<Person?> loadPersonById(int personId) async {
+    Person? person = await persistencePerson.getById(database, personId);
+    return person;
+  }
 
   Future<List<Person>> loadPersons() async {
     List<Person> persons = await persistencePerson.load(database);
@@ -122,6 +132,8 @@ class PersistenceManager {
   }
 
   ///Persons Apart
+
+
 
   ///Selection
 

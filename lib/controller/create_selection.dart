@@ -2,6 +2,7 @@ import 'package:ag_selector/controller/persistence/persistence_manager.dart';
 import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
+import 'package:ag_selector/model/selection_object.dart';
 import 'package:ag_selector/util/string_utils.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,7 @@ class CreateSelection {
 
   bool allPersonsGotAgs = true;
 
-  Future<Map<Person, Map<String, AG>>> createSelection(
+  Future<List<SelectionObject>> createSelection(
       PersistenceManager persistenceManager,
       List<Person> persons,
       List<AG> ags,
@@ -17,7 +18,7 @@ class CreateSelection {
     
     allPersonsGotAgs = true;
 
-    Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
+    List<SelectionObject> selection = [];
 
     selection = await _tryAllFirstChoice(persistenceManager, persons, ags);
 
@@ -47,11 +48,11 @@ class CreateSelection {
     return selection;
   }
 
-  Future<Map<Person, Map<String, AG>>> _tryAllFirstChoice(
+  Future<List<SelectionObject>> _tryAllFirstChoice(
       PersistenceManager persistenceManager,
       List<Person> persons,
       List<AG> ags) async {
-    Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
+    List<SelectionObject> selection = [];
 
     //max person tracker for tracking, if the ag still has slots left
     Map<int, int> maxPersonTracker = getMaxPersonTracker(ags);
@@ -79,12 +80,12 @@ class CreateSelection {
                 maxPersonTracker[preferedAG.id] =
                     maxPersonTracker[preferedAG.id]! - 1;
               } else {
-                return <Person, Map<String, AG>>{};
+                return [];
               }
             }
           }
         } else {
-          return <Person, Map<String, AG>>{};
+          return [];
         }
       }
       //reset maxPersonTracker for the next weekday
@@ -99,12 +100,12 @@ class CreateSelection {
   /// and Persons who got a low preference AG get a Score Value added. In the next round,
   /// the AGs are distributed based on the scores until all relevant weekdays are
   /// finished.
-  Future<Map<Person, Map<String, AG>>> _tryScoring(
+  Future<List<SelectionObject>> _tryScoring(
       PersistenceManager persistenceManager,
       List<Person> persons,
       List<AG> ags,
       int numberOfPreferences) async {
-    Map<Person, Map<String, AG>> selection = <Person, Map<String, AG>>{};
+    List<SelectionObject> selection = [];
 
     //shuffle persons, to give everybody the chance to be the first.
     persons.shuffle();
@@ -158,16 +159,12 @@ class CreateSelection {
     return selection;
   }
 
-  Map<Person, Map<String, AG>> putInSelection(
-      Map<Person, Map<String, AG>> selection,
+  List<SelectionObject> putInSelection(
+      List<SelectionObject> selection,
       Person person,
       String weekday,
       AG ag) {
-    if (selection.keys.contains(person)) {
-      selection[person]!.putIfAbsent(weekday, () => ag);
-    } else {
-      selection.putIfAbsent(person, () => {weekday: ag});
-    }
+        selection.add(SelectionObject(id: -1, weekday: weekday, person: person, ag: ag));
     return selection;
   }
 
