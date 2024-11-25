@@ -11,6 +11,7 @@ import 'package:ag_selector/model/ag.dart';
 import 'package:ag_selector/model/persistence_object.dart';
 import 'package:ag_selector/model/person.dart';
 import 'package:ag_selector/model/person_ag_preference.dart';
+import 'package:ag_selector/model/selection_object.dart';
 import 'package:ag_selector/model/settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -25,6 +26,8 @@ class PersistenceManager {
   late PersistencePerson persistencePerson;
   late PersistencePersonAgPreferences persistencePersonAgPreferences;
   late PersistenceSettings persistenceSettings;
+  late PersistenceSelection persistenceSelection;
+  late PersistencePersonApart persistencePersonApart;
 
   PersistenceManager() {
     if (Platform.isWindows) {
@@ -35,6 +38,8 @@ class PersistenceManager {
     persistencePerson = PersistencePerson();
     persistencePersonAgPreferences = PersistencePersonAgPreferences();
     persistenceSettings = PersistenceSettings();
+    persistenceSelection = PersistenceSelection();
+    persistencePersonApart = PersistencePersonApart();
   }
 
   ///AG
@@ -137,7 +142,22 @@ class PersistenceManager {
 
   ///Selection
 
-  
+  Future<List<SelectionObject>> loadSelection() async {
+    return await persistenceSelection.load(database, this);
+  }
+
+  void deleteSelection() async {
+    persistenceSelection.deleteAll(database);
+  }
+
+  Future<List<SelectionObject>> insertAllSelection(List<SelectionObject> selection) async {
+    return await persistenceSelection.insertAll(database, selection);
+  }
+
+  Future<List<SelectionObject>> updateAllSelection(List<SelectionObject> selection) async {
+    deleteSelection();
+    return await persistenceSelection.insertAll(database, selection);
+  }
 
   ///Settings
 

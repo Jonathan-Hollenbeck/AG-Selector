@@ -28,22 +28,20 @@ class PersistenceSelection {
     return selection;
   }
 
-  Future<int> insert(Database? database, SelectionObject selectionObject) async {
-    int id = -1;
+  Future<List<SelectionObject>> insertAll(Database? database, List<SelectionObject> selection) async {
     if (database != null && database.isOpen) {
-      Map<String, Object> objectMap = toObjectMap(selectionObject, false);
-      id = await database.insert(tableName, objectMap);
+      for(SelectionObject selectionObject in selection){
+        Map<String, Object> objectMap = toObjectMap(selectionObject, false);
+        selectionObject.id = await database.insert(tableName, objectMap);
+      }
     }
-    return id;
+    return selection;
   }
 
-  Future<int> delete(Database? database, SelectionObject selectionObject) async {
-    Future<int> numberOfRowsAffected = Future(() => 0);
+  void deleteAll(Database? database) async {
     if (database != null && database.isOpen) {
-      numberOfRowsAffected = database.delete(tableName,
-          where: "${PersistenceObject.idDBField} = ?", whereArgs: [selectionObject.id]);
+      database.delete(tableName);
     }
-    return numberOfRowsAffected;
   }
 
   Map<String, Object> toObjectMap(SelectionObject selectionObject, bool withId) {

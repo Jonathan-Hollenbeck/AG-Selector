@@ -61,6 +61,7 @@ class _SelectorListState extends State<Selector> {
     selection = await createSelection.createSelection(
         widget.persistenceManager, persons, ags, settings.numberOfPreferences, context);
     selection.sort((a, b) => StringUtils.combineHouseAndClass(a.person).compareTo(StringUtils.combineHouseAndClass(b.person)));
+    selection = await widget.persistenceManager.updateAllSelection(selection);
     setState(() {
       for(SelectionObject selectionObject in selection){
         filterWeekdaySet.add(selectionObject.weekday);
@@ -74,12 +75,18 @@ class _SelectorListState extends State<Selector> {
   void initState() {
     super.initState();
 
+    reloadSelection();
     reloadPersons();
     reloadAgs();
     reloadSettings();
     setState(() {
       filterWeekdaySet.add("Wochentag");
     });
+  }
+
+  void reloadSelection() async {
+    selection = await widget.persistenceManager.loadSelection();
+    setState(() {});
   }
 
   void reloadAgs() async {
