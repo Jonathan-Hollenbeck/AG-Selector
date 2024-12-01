@@ -60,7 +60,7 @@ class CreateSelection {
     //get all relevant weekdays
     Set<String> relevantWeekdays = getRelevantWeekdays(persons, ags);
 
-    Map<Person, List<Person>> personsApart = await persistenceManager.loadPersonsApart();
+    Map<int, List<int>> personsApart = await persistenceManager.loadPersonsApart();
 
     //loop through relevant weekdays
     for (String weekday in relevantWeekdays) {
@@ -75,7 +75,7 @@ class CreateSelection {
               //if the ag is already full or the ag does not exist in the tracker, return a emtpy map
               if (maxPersonTracker.keys.contains(preferedAG.id) &&
                   maxPersonTracker[preferedAG.id]! > 0 &&
-                  !apartPersonAlreadyInAG(personsApart[person], preferedAG, selection)) {
+                  !apartPersonAlreadyInAG(personsApart[person.id], preferedAG, selection)) {
                 //if the ag still has slots left, put the person into it
                 selection =
                     putInSelection(selection, person, weekday, preferedAG);
@@ -125,7 +125,7 @@ class CreateSelection {
       preferenceScoring[person] = 0;
     }
 
-    Map<Person, List<Person>> personsApart = await persistenceManager.loadPersonsApart();
+    Map<int, List<int>> personsApart = await persistenceManager.loadPersonsApart();
 
     //loop through relevant weekdays
     for (String weekday in relevantWeekdays) {
@@ -138,7 +138,7 @@ class CreateSelection {
                 await persistenceManager.getPersonAgPreferences(person),
                 weekday);
         AG? ag =
-            getMostPossiblePreferedAG(maxPersonTracker, personAgPreferences, personsApart[person], selection);
+            getMostPossiblePreferedAG(maxPersonTracker, personAgPreferences, personsApart[person.id], selection);
         //didnt get an AG, so the persons score gets to be very high
         if (ag == null) {
           selection =
@@ -186,7 +186,7 @@ class CreateSelection {
   AG? getMostPossiblePreferedAG(
       Map<int, int> maxPersonTracker,
       List<PersonAgPreference> agPreferences,
-      List<Person>? personsApart,
+      List<int>? personsApart,
       List<SelectionObject> selection) {
     //sort List by preferenceNumber, so that it looks for the most prefered AG first
     agPreferences
@@ -251,12 +251,12 @@ class CreateSelection {
     return maxPersonTracker;
   }
 
-  bool apartPersonAlreadyInAG(List<Person>? personsApart, AG ag, List<SelectionObject> selection){
+  bool apartPersonAlreadyInAG(List<int>? personsApart, AG ag, List<SelectionObject> selection){
     if(personsApart == null){
       return false;
     }
     for(SelectionObject selectionObject in selection){
-      if(selectionObject.ag.id == ag.id && personsApart.contains(selectionObject.person)){
+      if(selectionObject.ag.id == ag.id && personsApart.contains(selectionObject.person.id)){
         return true;
       }
     }

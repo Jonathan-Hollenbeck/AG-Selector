@@ -110,13 +110,13 @@ class _PersonFormState extends State<PersonForm> {
   }
 
   void selectPersonsApart() {
-    List<Person> personListWithoutMyself = [...widget.persons];
-    personListWithoutMyself.remove(widget.person);
+    List<Person> personListWithoutCurrent = [...widget.persons];
+    personListWithoutCurrent.remove(widget.person);
     Navigator.push(
       context,
       MaterialPageRoute(
           builder: (context) => SelectPersonApartForm(
-                persons: personListWithoutMyself,
+                persons: personListWithoutCurrent,
                 personsApart: personsApart,
                 onPersonsApartSelected: onPersonApartSelected,
               )),
