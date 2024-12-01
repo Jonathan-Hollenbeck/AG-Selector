@@ -62,12 +62,14 @@ class PersistenceSelection {
     int personId = objectMap[personIdDBField] as int;
     Person? person = await persistenceManager.loadPersonById(personId);
 
+    if(person == null){
+      return null;
+    }
+
     int agId = objectMap[agIdDBField] as int;
     AG? ag = await persistenceManager.loadAgById(agId);
 
-    if(person == null || ag == null){
-      return null;
-    }
+    ag ??= AG.createEmptyAG();
 
     String weekday = objectMap[weekdayDBField] as String;
     return SelectionObject(id: id, weekday: weekday, person: person, ag: ag);

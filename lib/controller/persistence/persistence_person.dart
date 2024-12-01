@@ -13,6 +13,9 @@ class PersistencePerson {
   static const String weekdaysPresentDBField = "weekdays";
 
   Future<Person?> getById(Database? database, int id) async {
+    if(id == -1){
+      return null;
+    }
     Person? person;
     if (database != null && database.isOpen) {
       final List<Map<String, Object?>> personsMap = await database.query(

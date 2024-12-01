@@ -15,6 +15,9 @@ class PersistenceAg {
   static const String endTimeDBField = "endTime";
 
   Future<AG?> getById(Database? database, int id) async {
+    if(id == -1){
+      return null;
+    }
     AG? ag;
     if (database != null && database.isOpen) {
       final List<Map<String, Object?>> agsMap = await database.query(tableName,
